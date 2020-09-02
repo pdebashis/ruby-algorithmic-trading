@@ -44,6 +44,7 @@ class Feeder
     else
       self.persist_bar
       @ticks[time] = [last_price]
+      emit tick: last_price
     end
   end
 

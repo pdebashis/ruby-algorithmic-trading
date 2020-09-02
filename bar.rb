@@ -10,7 +10,6 @@ class Bar
   end
 
   def add_bar_data symbol, data
-    raise "Date not matched" if data[:date] != @date
     @bar_data[symbol] = data
   end
 end
