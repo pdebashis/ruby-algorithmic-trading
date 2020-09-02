@@ -39,20 +39,19 @@ class Feeder
     last_price = tick.first[:last_price]
     
     if @ticks[time]
+      emit tick: last_price
       @ticks[time] << last_price
     else
-      self.persist
+      self.persist_bar
       @ticks[time] = [last_price]
     end
   end
 
   private
 
-  def persist
-    @logger.info @ticks.keys
+  def persist_bar
     @ticks.each do |k,v|
       d = {
-        date: @today,
         time: k,
         open: v.first,
         high: v.max,
@@ -71,35 +70,4 @@ class Feeder
     @logger.info @bars
     emit bar: @bars[time]
   end
-
-  # def add_bar symbol, hash
-  #   date = hash[:date]
-  #   @bars[date] ||= Bar.new date
-  #   @bars[date].add_bar_data symbol, hash
-  # end
-
-  # def on_complete response
-  #   if response.success?
-  #     request = response.request
-  #     begin
-  #       stock_symbol = request.options[:params][:s].to_s.downcase.to_sym
-  #     rescue
-  #       return stock_symbol
-  #     end
-  #     CSV.parse(response.body, headers: true, header_converters: :symbol) do |row|
-  #       row = row.to_hash
-  #       next if row[:date].blank?
-  #       add_bar stock_symbol, row
-  #     end
-  #   elsif response.timed_out?
-  #     # aw hell no
-  #     puts '[ERROR] got a time out'
-  #   elsif response.code == 0
-  #     # Could not get an http response, something's wrong.
-  #     puts "[ERROR] response.return_message"
-  #   else
-  #     # Received a non-successful http response.
-  #     puts "[ERROR] HTTP request failed: " + response.code.to_s
-  #   end
-  # end
 end

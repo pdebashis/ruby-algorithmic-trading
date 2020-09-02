@@ -2,8 +2,7 @@ require_relative 'kite_connect'
 require_relative 'kite_ticker'
 require_relative 'feeder'
 require_relative 'bar'
-require_relative 'bar_data'
-require_relative 'simple_strategy'
+require_relative 'strategy_highlow'
 require 'frappuccino'
 require 'logger'
 require 'yaml'
@@ -30,7 +29,7 @@ end
 kite_ticker = KiteTicker.new(kite_connect.access_token,kite_connect.api_key,LOG)
 feeder = Feeder.new(kite_ticker,LOG)
 
-strategy = SimpleStrategy.new(feeder, LOG)
+strategy = StrategyHighLow.new(feeder, LOG)
 
 strategy.start
 

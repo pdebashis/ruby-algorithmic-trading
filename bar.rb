@@ -11,6 +11,6 @@ class Bar
 
   def add_bar_data symbol, data
     raise "Date not matched" if data[:date] != @date
-    @bar_data[symbol] = data.merge(symbol: symbol)
+    @bar_data[symbol] = data
   end
 end
