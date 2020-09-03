@@ -1,0 +1,4 @@
+--- TODO
+ - Dynamic levels updating during runtime
+ - Limit strategy runtime between 9.15 and 15.15
+ - Automate request token login

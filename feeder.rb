@@ -68,7 +68,6 @@ class Feeder
     time = hash[:time]
     @bars[time] ||= Bar.new @today
     @bars[time].add_bar_data 260105,hash
-    @logger.info @bars
     emit bar: @bars[time]
   end
 end

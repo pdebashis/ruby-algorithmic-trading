@@ -52,12 +52,12 @@ class StrategyHighLow
   end
   
   def on_tick tick
-    @logger.info tick
     do_action(tick) if @candle[4].eql? "GREEN" or @candle[4].eql? "RED"
     book_pl(tick) if @candle[4].eql? "CALL" or @candle[4].eql? "PUT"  
   end
   
   def on_bar bar
+    @logger.info bar
     bar.bar_data.each do |symbol, data|
       @logger.info "received #{data}"
       time = data[:time]
@@ -117,6 +117,7 @@ class StrategyHighLow
         @stop_loss=@levels[0]
         @stop_loss=[tick-@tolerence,@levels[0]].max if @tolerence>0
         @candle[4]="CALL"
+        @candle[3]=tick
         @logger.info "BUY CALL near #{tick}; target:#{@target};SL:#{@stop_loss}"
       else
         @logger.info "NO ACTION due to market lower than level"
@@ -132,7 +133,8 @@ class StrategyHighLow
 
         @stop_loss=@levels[1]
         @stop_loss=[tick+@tolerence,@levels[1]].min if @tolerence>0
-        @candle[4]=["PUT"]
+        @candle[4]="PUT"
+        @candle[3]=tick
         @logger.info "BUY PUT near #{tick}; target:#{@target};SL:#{@stop_loss}"
       else
         @logger.info "NO ACTION due to market higher than level"
@@ -144,13 +146,13 @@ class StrategyHighLow
   def book_pl tick
     if @candle[4] == "PUT"
           if tick > @stop_loss
-            diffe=tick-@stop_loss
-            @net_day+=@diffe
+            diffe = tick - @candle[3]
+            @net_day+=diffe
             @logger.info "LOSS:#{diffe}"
             reset_counters
           elsif tick < @target
-            diffe=tick-@target
-            @net_day+=@diffe
+            diffe=tick-@candle[3]
+            @net_day+=diffe
             @logger.info "PROFIT:#{diffe}"
             reset_counters
           end
@@ -158,12 +160,12 @@ class StrategyHighLow
 
     if @candle[4] == "CALL"
       if tick > @target
-        diffe=@target-@tick
+        diffe = tick - @candle[3]
         @net_day+=diffe
         @logger.info "PROFIT:#{diffe}"
         reset_counters
       elsif tick < @stop_loss
-        diffe=@stop_loss-tick
+        diffe=tick-@candle[3]
         @net_day+=diffe
         @logger.info "LOSS:#{diffe}"
         reset_counters
