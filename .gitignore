@@ -1,6 +1,7 @@
 *.gem
 *.rbc
 /config/config.yaml
+/config/levels.yaml
 /coverage/
 /InstalledFiles
 /pkg/
@@ -10,6 +11,7 @@
 /test/version_tmp/
 /tmp/
 /logs/
+TODO
 
 # Used by dotenv library to load environment variables.
 # .env

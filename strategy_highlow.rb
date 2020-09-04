@@ -57,20 +57,20 @@ class StrategyHighLow
   end
   
   def on_bar bar
-    @logger.info bar
     bar.bar_data.each do |symbol, data|
-      @logger.info "received #{data}"
+      @logger.info "NEW CANDLE #{data}"
       time = data[:time]
       opening = data[:open]
       high = data[:high]
       low = data[:low]
       closing = data[:close]
 
-      if time.eql? "15:00"
+      if time.eql? "15:0"
         close_day(c)
       elsif time.eql? "15.15"
-       @logger.info "NET:#{@netday}"
+        @logger.info "NET:#{@netday}"
       end
+
       @levels=get_levels(closing) if @levels.empty?
       assign_candle(opening,high,low,closing) if @candle.empty?
     end
@@ -146,12 +146,12 @@ class StrategyHighLow
   def book_pl tick
     if @candle[4] == "PUT"
           if tick > @stop_loss
-            diffe = tick - @candle[3]
+            diffe = @candle[3]-tick
             @net_day+=diffe
             @logger.info "LOSS:#{diffe}"
             reset_counters
           elsif tick < @target
-            diffe=tick-@candle[3]
+            diffe=@candle[3]-tick
             @net_day+=diffe
             @logger.info "PROFIT:#{diffe}"
             reset_counters
@@ -165,7 +165,7 @@ class StrategyHighLow
         @logger.info "PROFIT:#{diffe}"
         reset_counters
       elsif tick < @stop_loss
-        diffe=tick-@candle[3]
+        diffe= tick - @candle[3]
         @net_day+=diffe
         @logger.info "LOSS:#{diffe}"
         reset_counters
