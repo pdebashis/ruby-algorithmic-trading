@@ -9,8 +9,11 @@ require 'yaml'
 
 CONFIG = OpenStruct.new YAML.load_file 'config/config.yaml'
 
-today=Time.now.strftime("%H:%M:%S")
 LOG=Logger.new('logs/app.log', 'daily', 30)
+LOG.formatter = proc do |severity, datetime, progname, msg|
+    date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
+    "[#{date_format}] #{severity.ljust(5)}: #{msg}\n"
+end
 
 LOG.info "STARTED Thread for #{Time.now}"
 

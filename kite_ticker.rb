@@ -60,7 +60,6 @@ class KiteTicker
     def parse_binary_custom(bin)
         packets = split_packets(bin)
         data = []
-        time_format="%H:%M:%S"
 
         packets.each do |packet|
             instrument_token = unpack_int(packet, 0, 4)
@@ -83,7 +82,7 @@ class KiteTicker
                 if packet.size == 32
                     begin
                         timestamp = unpack_int(packet, 28, 32)
-                        daytime=Time.at(timestamp).strftime(time_format)
+                        daytime=Time.at(timestamp)
                     rescue
                         daytime = nil
                     end
@@ -122,14 +121,14 @@ class KiteTicker
               if packet.size == 184
                     begin
                         last_trade_time = unpack_int(packet, 44, 48)
-                        daytime=Time.at(last_trade_time).strftime(time_format)
+                        daytime=Time.at(last_trade_time)
                     rescue
                         daytime = nil
                     end
 
                     begin
                         timestamp = unpack_int(packet, 60, 64)
-                        daytime=Time.at(timestamp).strftime(time_format)
+                        daytime=Time.at(timestamp)
                     rescue
                         daytime = nil
                     end
@@ -170,7 +169,6 @@ class KiteTicker
   def parse_binary(bin)
         packets = split_packets(bin)
         data = []
-        time_format="%A %H:%M:%S"
 
         packets.each do |packet|
             instrument_token = unpack_int(packet, 0, 4)
@@ -217,7 +215,7 @@ class KiteTicker
                 if packet.size == 32
                     begin
                         timestamp = unpack_int(packet, 28, 32)
-                        daytime=Time.at(timestamp).strftime(time_format)
+                        daytime=Time.at(timestamp)
                     rescue
                         daytime = nil
                     end
@@ -260,14 +258,14 @@ class KiteTicker
               if packet.size == 184
                     begin
                         last_trade_time = unpack_int(packet, 44, 48)
-                        daytime=Time.at(last_trade_time).strftime(time_format)
+                        daytime=Time.at(last_trade_time)
                     rescue
                         daytime = nil
                     end
 
                     begin
                         timestamp = unpack_int(packet, 60, 64)
-                        daytime=Time.at(timestamp).strftime(time_format)
+                        daytime=Time.at(timestamp)
                     rescue
                         daytime = nil
                     end

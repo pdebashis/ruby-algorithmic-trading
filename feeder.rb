@@ -4,7 +4,7 @@ class Feeder
   def initialize (ticker, logger=nil)
     @ticker = ticker    
     @logger = logger
-    @today = Time.now.strftime "%Y:%m:%d"
+    @today = Time.now.getlocal("+05:30").strftime "%Y:%m:%d"
     @ticks = {}
     @bars = {}
   end
@@ -32,9 +32,9 @@ class Feeder
   end
 
   def fetch tick
-    #if 15 minute data, maintain in memory
-    time_h = tick.first[:timestamp][0..1]
-    time_m = tick.first[:timestamp][3..4].to_i / 15
+    epoch = tick.first[:timestamp]
+    time_h = Time.at(epoch).getlocal("+05:30").hour
+    time_m = Time.at(epoch).getlocal("+05:30").hour/ 15
     time = "#{time_h}:#{time_m*15}"
     last_price = tick.first[:last_price]
     
@@ -46,6 +46,7 @@ class Feeder
       @ticks[time] = [last_price]
       emit tick: last_price
     end
+    @logger.info @ticks
   end
 
   private

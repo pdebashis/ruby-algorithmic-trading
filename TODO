@@ -1,1 +1,5 @@
 --- TODO
+ - Dynamic levels updating during runtime
+ - Limit strategy runtime between 9.15 and 15.15
+ - Automate request token login
+ - Some modification in booking (target case only), book at 10 pts below the mentioned target, eg: if target is at 22300, if we touch 22290 we can book position.
