@@ -15,7 +15,7 @@ LOG.formatter = proc do |severity, datetime, progname, msg|
     "[#{date_format}] #{severity.ljust(5)}: #{msg}\n"
 end
 
-LOG.info "STARTED Thread for #{Time.now}"
+LOG.info "STARTED Thread for #{Time.now.getlocal("+05:30")}"
 
 kite_connect = KiteConnect.new(CONFIG.api_key,LOG)
 
