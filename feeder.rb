@@ -46,7 +46,6 @@ class Feeder
       @ticks[time] = [last_price]
       emit tick: last_price
     end
-    @logger.info @ticks
   end
 
   private
