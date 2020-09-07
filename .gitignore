@@ -11,6 +11,7 @@
 /test/version_tmp/
 /tmp/
 /logs/
+nohup.out
 
 # Used by dotenv library to load environment variables.
 # .env
