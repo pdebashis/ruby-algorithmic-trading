@@ -34,12 +34,14 @@ class Feeder
   def fetch tick
     epoch = tick.first[:timestamp]
     time_h = Time.at(epoch).getlocal("+05:30").hour
-    time_m = Time.at(epoch).getlocal("+05:30").hour/ 15
-    time = "#{time_h}:#{time_m*15}"
+    time_m = Time.at(epoch).getlocal("+05:30").min
+    time_c = time_m/15
+    time = "#{time_h}:#{time_c*15}"
     last_price = tick.first[:last_price]
     
     if @ticks[time]
       emit tick: last_price
+      @logger.info "#{time_h}:#{time_m} => #{last_price}"
       @ticks[time] << last_price
     else
       persist_bar

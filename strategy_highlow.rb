@@ -52,8 +52,10 @@ class StrategyHighLow
   end
   
   def on_tick tick
-    do_action(tick) if @candle[4].eql? "GREEN" or @candle[4].eql? "RED"
-    book_pl(tick) if @candle[4].eql? "CALL" or @candle[4].eql? "PUT"  
+    unless @candle.empty?
+      do_action(tick) if @candle[4].eql? "GREEN" or @candle[4].eql? "RED"
+      book_pl(tick) if @candle[4].eql? "CALL" or @candle[4].eql? "PUT"  
+    end
   end
   
   def on_bar bar
@@ -66,7 +68,7 @@ class StrategyHighLow
       closing = data[:close]
 
       if time.eql? "15:0"
-        close_day(c)
+        close_day(closing)
       elsif time.eql? "15.15"
         @logger.info "NET:#{@netday}"
       end
@@ -148,12 +150,12 @@ class StrategyHighLow
           if tick > @stop_loss
             diffe = @candle[3]-tick
             @net_day+=diffe
-            @logger.info "LOSS:#{diffe}"
+            @logger.info "STOPLOSS HIT:#{diffe}"
             reset_counters
           elsif tick < @target
             diffe=@candle[3]-tick
             @net_day+=diffe
-            @logger.info "PROFIT:#{diffe}"
+            @logger.info "TARGET HIT:#{diffe}"
             reset_counters
           end
     end

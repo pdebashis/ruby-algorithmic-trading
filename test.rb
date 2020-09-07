@@ -10,9 +10,15 @@ require 'yaml'
 CONFIG = OpenStruct.new YAML.load_file 'config/config.yaml'
 
 LOG=Logger.new('logs/app.log', 'daily', 30)
+DATA=Logger.new('logs/data.log')
+
 LOG.formatter = proc do |severity, datetime, progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
     "[#{date_format}] #{severity.ljust(5)}: #{msg}\n"
+end
+
+DATA.formatter = proc do |severity, datetime, progname, msg|
+    "#{msg}\n"
 end
 
 LOG.info "STARTED Thread for #{Time.now.getlocal("+05:30")}"
@@ -30,7 +36,7 @@ else
 end
 
 kite_ticker = KiteTicker.new(kite_connect.access_token,kite_connect.api_key,LOG)
-feeder = Feeder.new(kite_ticker,LOG)
+feeder = Feeder.new(kite_ticker,DATA)
 
 strategy = StrategyHighLow.new(feeder, LOG)
 
