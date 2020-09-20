@@ -1,4 +1,4 @@
-######################### The high high and low low strategy
+######################### The Big Candle strategy
     #Is candle1 green?
     # Is current closing above previous level 0 
       # Is current high touching current level 1?
@@ -10,16 +10,6 @@
         # Yes -> this is green2 (buy for target -z)
         # No -> this is new candle 1 and it is red
 
-    #Is candle1 red?
-    # Is current closing below previous level 1
-      # Is current low touching current level 0?
-        #Yes -> this is new candle 1 and it is green
-        #No -> this is consecutive red candle (sell for target -z)
-    # Is current closing above previous level 1
-      # If Current high touching current level 1
-      #reset levels
-        # Yes -> this is red2 (sell for target -z)
-        # No -> this is new candle 1 and it is green
 ##########################
 
 ##########################
@@ -31,7 +21,7 @@
 
 ##########################
 
-class StrategyHighLow
+class StrategyBigCandle
   def initialize kite_connect, feeder, logger=nil, starting_capital=0, commission_per_trade=0, limit=0
     @user = kite_connect
     Frappuccino::Stream.new(feeder).

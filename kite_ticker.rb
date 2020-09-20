@@ -52,7 +52,13 @@ class KiteTicker
   end
 
   def make_sense(bin)
-    parse_binary_custom(bin)
+    case bin.class.name
+      when "String"
+        @logger.debug "Non binary data received on socket"
+        bin
+      when "Array"
+        parse_binary_custom(bin)
+    end
   end
 
   private

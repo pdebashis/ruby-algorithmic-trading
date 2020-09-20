@@ -1,6 +1,5 @@
 class Feeder
 
-
   def initialize (ticker, logger=nil)
     @ticker = ticker    
     @logger = logger
@@ -20,7 +19,9 @@ class Feeder
 
       @ticker.ws.on :message do |event|
         socket_feed = @ticker.make_sense( event.data )
-        self.fetch socket_feed if event.data.size > 2
+        self.fetch socket_feed if event.data.kind_of?(Array) and event.data.size > 2
+        
+        @logger.info socket_feed if event.data.kind_of?(String)
       end
 
       @ticker.ws.on :close do |event|
@@ -46,6 +47,7 @@ class Feeder
     else
       persist_bar
       @ticks[time] = [last_price]
+      @logger.info "NEW CANDLE"
       emit tick: last_price
     end
   end
