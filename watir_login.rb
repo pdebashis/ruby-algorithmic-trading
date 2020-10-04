@@ -20,6 +20,8 @@ browser.input(id: "pin").send_keys otp
 browser.button(:visible_text => "Continue").click
 sleep(2)
 
+puts browser.url
+
 request_token=browser.url.split("request_token=")[1].split("&")[0]
 
 CONFIG[:access_token] = nil 

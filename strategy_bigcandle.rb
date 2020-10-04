@@ -22,7 +22,7 @@
 ##########################
 
 class StrategyBigCandle
-  def initialize kite_connect, feeder, logger=nil, starting_capital=0, commission_per_trade=0, limit=0
+  def initialize kite_connect, feeder, logger=nil
     @user = kite_connect
     Frappuccino::Stream.new(feeder).
       select{ |event| event.has_key?(:bar) && !event[:bar].nil? }.
@@ -41,7 +41,8 @@ class StrategyBigCandle
 
     @target=0
     @stop_loss=0
-    @tolerence=0
+    @early_book=20
+
     @net_day=0
     @net_bnf=0
     
@@ -65,10 +66,12 @@ class StrategyBigCandle
       low = data[:low]
       closing = data[:close]
 
-      if time.eql? "15:0"
+      if time.eql? "14:45"
         close_day(closing)
-      elsif time.eql? "15:15"
+      elsif time.eql? "15:0"
         @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
+      elsif time.eql? "9:0"
+        @logger.info "GLHF"
       else
         @levels=get_levels(closing) if @levels.empty?
         assign_candle(opening,high,low,closing) if @candle.empty?
@@ -124,11 +127,9 @@ class StrategyBigCandle
     if @candle[4] == "GREEN"
       if tick > @levels[0]
         @levels=get_levels(tick)
-        @target=@levels[1]
-        @target=[tick+tolerence,levels[1]].min if @tolerence>0
+        @target= @levels[1] - tick >= 50 ? @levels[1]-@early_book : @levels[1]
 
         @stop_loss=@levels[0]
-        @stop_loss=[tick-@tolerence,@levels[0]].max if @tolerence>0
         ltp = ltp_ce
         @candle=[0,0,ltp,tick,"BUY"]
         @logger.info "BUY Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"
@@ -142,10 +143,8 @@ class StrategyBigCandle
       if tick < @levels[1]
         @levels=get_levels(tick)
         @target=@levels[0]
-        @target=[tick-@tolerence,@levels[0]].max if @tolerence>0
 
         @stop_loss=@levels[1]
-        @stop_loss=[tick+@tolerence,@levels[1]].min if @tolerence>0
         ltp=ltp_pe
         @candle=[0,0,ltp,tick,"SELL"]
         @logger.info "SELL Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"

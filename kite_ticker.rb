@@ -40,6 +40,15 @@ class KiteTicker
     end
   end
 
+  def unsubscribe (token)
+    begin
+      d = {a: "unsubscribe", v: [token.to_i]}
+      @ws.send(d.to_json.to_s)
+    rescue
+      return false
+    end
+  end
+
   def set_mode (mode,token)
     return false unless MODES.include? mode
 
@@ -77,10 +86,12 @@ class KiteTicker
             # LTP packets
             if packet.size == 8
                 data << {
-                    last_price: unpack_int(packet, 4, 8) / divisor
+                  instrument_token: instrument_token,  
+                  last_price: unpack_int(packet, 4, 8) / divisor
                 }
             elsif packet.size == 28 or packet.size == 32
                 d = {
+                    instrument_token: instrument_token,
                     last_price: unpack_int(packet, 4, 8) / divisor,
                 }
 
@@ -88,11 +99,10 @@ class KiteTicker
                 if packet.size == 32
                     begin
                         timestamp = unpack_int(packet, 28, 32)
-                        daytime=Time.at(timestamp)
                     rescue
-                        daytime = nil
+                        timestamp = nil
                     end
-                  d[:timestamp] = daytime
+                  d[:timestamp] = timestamp
                 end
                 
 
@@ -134,9 +144,8 @@ class KiteTicker
 
                     begin
                         timestamp = unpack_int(packet, 60, 64)
-                        daytime=Time.at(timestamp)
                     rescue
-                        daytime = nil
+                        timestamp = nil
                     end
 
                     d[:last_trade_time] = last_trade_time

@@ -1,4 +1,4 @@
-######################### The high high and low low strategy
+######################### The Big Candle strategy
     #Is candle1 green?
     # Is current closing above previous level 0 
       # Is current high touching current level 1?
@@ -10,16 +10,6 @@
         # Yes -> this is green2 (buy for target -z)
         # No -> this is new candle 1 and it is red
 
-    #Is candle1 red?
-    # Is current closing below previous level 1
-      # Is current low touching current level 0?
-        #Yes -> this is new candle 1 and it is green
-        #No -> this is consecutive red candle (sell for target -z)
-    # Is current closing above previous level 1
-      # If Current high touching current level 1
-      #reset levels
-        # Yes -> this is red2 (sell for target -z)
-        # No -> this is new candle 1 and it is green
 ##########################
 
 ##########################
@@ -31,7 +21,7 @@
 
 ##########################
 
-class StrategyHighLow
+class StrategyEliminateSL
   def initialize kite_connect, feeder, logger=nil
     @user = kite_connect
     Frappuccino::Stream.new(feeder).
@@ -51,7 +41,7 @@ class StrategyHighLow
 
     @target=0
     @stop_loss=0
-    @tolerence=0
+
     @net_day=0
     @net_bnf=0
     
@@ -120,10 +110,10 @@ class StrategyHighLow
     if l <= @levels[0] and h >= @levels[1]
       @logger.info "UNDECIDED due to high and low outside levels"
       reset_counters
-    elsif h >= @levels[1]
+    elsif h >= @levels[1] and c < @levels[1]-10
       @candle=[c,h,l,o,"RED"]
       @logger.info "RED"
-    elsif l <= @levels[0]
+    elsif l <= @levels[0] and c > @levels[0]+10
       @candle=[c,h,l,o,"GREEN"]
       @logger.info "GREEN"
     else
@@ -136,11 +126,9 @@ class StrategyHighLow
     if @candle[4] == "GREEN"
       if tick > @levels[0]
         @levels=get_levels(tick)
-        @target=@levels[1]
-        @target=[tick+tolerence,levels[1]].min if @tolerence>0
+        @target= @levels[1] 
 
         @stop_loss=@levels[0]
-        @stop_loss=[tick-@tolerence,@levels[0]].max if @tolerence>0
         ltp = ltp_ce
         @candle=[0,0,ltp,tick,"BUY"]
         @logger.info "BUY Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"
@@ -154,10 +142,8 @@ class StrategyHighLow
       if tick < @levels[1]
         @levels=get_levels(tick)
         @target=@levels[0]
-        @target=[tick-@tolerence,@levels[0]].max if @tolerence>0
 
         @stop_loss=@levels[1]
-        @stop_loss=[tick+@tolerence,@levels[1]].min if @tolerence>0
         ltp=ltp_pe
         @candle=[0,0,ltp,tick,"SELL"]
         @logger.info "SELL Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"

@@ -1,4 +1,4 @@
-######################### The high high and low low strategy
+######################### The Big Candle strategy
     #Is candle1 green?
     # Is current closing above previous level 0 
       # Is current high touching current level 1?
@@ -10,16 +10,6 @@
         # Yes -> this is green2 (buy for target -z)
         # No -> this is new candle 1 and it is red
 
-    #Is candle1 red?
-    # Is current closing below previous level 1
-      # Is current low touching current level 0?
-        #Yes -> this is new candle 1 and it is green
-        #No -> this is consecutive red candle (sell for target -z)
-    # Is current closing above previous level 1
-      # If Current high touching current level 1
-      #reset levels
-        # Yes -> this is red2 (sell for target -z)
-        # No -> this is new candle 1 and it is green
 ##########################
 
 ##########################
@@ -31,9 +21,10 @@
 
 ##########################
 
-class StrategyHighLow
+class StrategyEarlyTarget
   def initialize kite_connect, feeder, logger=nil
     @user = kite_connect
+    @feeder = feeder
     Frappuccino::Stream.new(feeder).
       select{ |event| event.has_key?(:bar) && !event[:bar].nil? }.
       map{ |event| event[:bar] }.
@@ -45,18 +36,20 @@ class StrategyHighLow
       on_value(&method(:on_tick))
     @logger = logger
 
-    @level_config=OpenStruct.new YAML.load_file('config/levels.yaml')
+    @quantity=0
     @levels=[]
     @candle=[]
 
     @target=0
     @stop_loss=0
-    @tolerence=0
+    @early_book=20
+
     @net_day=0
     @net_bnf=0
     
     @buy_instrument = 0
     @sell_instrument = 0
+    @strike = ""
   end
 
   def on_tick tick
@@ -90,15 +83,21 @@ class StrategyHighLow
 
   private 
 
-  def ltp_ce
+  def buy_ce
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @buy_instrument = config.instrument_ce.to_s
+    @strike = config.strike_ce
+    @quantity = config.quantity
+    @feeder.subscribe(@buy_instrument)
     @user.ltp(@buy_instrument).values.first["last_price"]
   end
 
-  def ltp_pe
+  def buy_pe
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @sell_instrument = config.instrument_pe.to_s
+    @strike = config.strike_pe
+    @quantity = config.quantity
+    @feeder.subscribe(@sell_instrument)
     @user.ltp(@sell_instrument).values.first["last_price"]
   end
 
@@ -108,8 +107,8 @@ class StrategyHighLow
   end
 
   def get_levels(closing_value)
-    @level_config=OpenStruct.new YAML.load_file('config/levels.yaml') 
-    targets = @level_config.levels.sort
+    level_config=OpenStruct.new YAML.load_file('config/levels.yaml') 
+    targets = level_config.levels.sort
     raise "Targets not enclosing the data points" if targets.first > closing_value or targets.last < closing_value 
     targets.each_with_index { |t,n|
       return [targets[n-1],t] if t > closing_value
@@ -136,14 +135,14 @@ class StrategyHighLow
     if @candle[4] == "GREEN"
       if tick > @levels[0]
         @levels=get_levels(tick)
-        @target=@levels[1]
-        @target=[tick+tolerence,levels[1]].min if @tolerence>0
+        @target= @levels[1] - tick >= 40 ? @levels[1]-@early_book : @levels[1]
 
         @stop_loss=@levels[0]
-        @stop_loss=[tick-@tolerence,@levels[0]].max if @tolerence>0
-        ltp = ltp_ce
+        ltp = buy_ce
         @candle=[0,0,ltp,tick,"BUY"]
-        @logger.info "BUY Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"
+        @logger.info "PLACE ORDER #{@strike} for #{@quantity} at #{ltp}"
+        @user.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+        @logger.info "BUY Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};#{@strike}:#{ltp}"
       else
         @logger.info "NO ACTION due to market lower than level"
         reset_counters
@@ -154,13 +153,13 @@ class StrategyHighLow
       if tick < @levels[1]
         @levels=get_levels(tick)
         @target=@levels[0]
-        @target=[tick-@tolerence,@levels[0]].max if @tolerence>0
 
         @stop_loss=@levels[1]
-        @stop_loss=[tick+@tolerence,@levels[1]].min if @tolerence>0
-        ltp=ltp_pe
+        ltp=buy_pe
         @candle=[0,0,ltp,tick,"SELL"]
-        @logger.info "SELL Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};LTP:#{ltp}"
+        @logger.info "PLACE ORDER #{@strike} for #{@quantity} at #{ltp}"
+        @user.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+        @logger.info "SELL Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss};#{@strike}:#{ltp}"
       else
         @logger.info "NO ACTION due to market higher than level"
         reset_counters
@@ -171,46 +170,50 @@ class StrategyHighLow
   def book_pl tick
     if @candle[4] == "SELL"
           if tick > @stop_loss
+            @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
             diffe = @candle[3]-tick
             @net_day+=diffe
-            ltp=ltp_pe
+            ltp=buy_pe
             diffe2 = ltp-@candle[2]
             @net_bnf+=diffe2
-            @logger.info "STOPLOSS HIT:#{diffe};LTP:#{ltp};BNF_POINTS:#{diffe2}"
+            @logger.info "STOPLOSS HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
             @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
             reset_counters
           elsif tick < @target
+            @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
             diffe=@candle[3]-tick
             @net_day+=diffe
-            ltp=ltp_pe
+            ltp=buy_pe
             diffe2= ltp-@candle[2]
             @net_bnf+=diffe2
-            @logger.info "TARGET HIT:#{diffe};LTP:#{ltp};BNF_POINTS:#{diffe2}"
+            @logger.info "TARGET HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
             @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
             reset_counters
           end
     end
 
     if @candle[4] == "BUY"
-      if tick > @target
-        diffe = tick - @candle[3]
-        @net_day+=diffe
-        ltp=ltp_ce
-        diffe2 = ltp - @candle[2]
-        @net_bnf+=diffe2
-        @logger.info "TARGET HIT:#{diffe};LTP:#{ltp};BNF_POINTS:#{diffe2}"
-        @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-        reset_counters
-      elsif tick < @stop_loss
-        diffe= tick - @candle[3]
-        @net_day+=diffe
-        ltp=ltp_ce
-        diffe2 = ltp - @candle[2]
-        @net_bnf+=diffe2
-        @logger.info "STOPLOSS HIT:#{diffe};LTP:#{ltp};BNF_POINTS:#{diffe2}"
-        @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-        reset_counters
-      end
+        if tick > @target
+          @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+          diffe = tick - @candle[3]
+          @net_day+=diffe
+          ltp=buy_ce
+          diffe2 = ltp - @candle[2]
+          @net_bnf+=diffe2
+          @logger.info "TARGET HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+          @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
+          reset_counters
+        elsif tick < @stop_loss
+          @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+          diffe= tick - @candle[3]
+          @net_day+=diffe
+          ltp=buy_ce
+          diffe2 = ltp - @candle[2]
+          @net_bnf+=diffe2
+          @logger.info "STOPLOSS HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+          @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
+          reset_counters
+        end
     end
   end
 
@@ -218,15 +221,17 @@ class StrategyHighLow
     differen=0
     diffe2=0
     if @candle[4] == "SELL"
+      @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
       differen = @candle[3] - close
-      ltp=ltp_pe
+      ltp=buy_pe
       diffe2 = ltp - @candle[2]
-      @logger.info "END TRADE:#{differen};LTP:#{ltp};BNF_POINTS:#{diffe2}"
+      @logger.info "END TRADE:#{differen};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
     elsif @candle[4] == "BUY"
+      @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
       differen = close - @candle[3]
-      ltp=ltp_ce
+      ltp=buy_ce
       diffe2 = ltp - @candle[2]
-      @logger.info "END TRADE if holding:#{differen};LTP:#{ltp};BNF_POINTS:#{diffe2}"
+      @logger.info "END TRADE:#{differen};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
     end
     @net_day+=differen
     @net_bnf+=diffe2

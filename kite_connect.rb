@@ -256,7 +256,7 @@ class KiteConnect
   # CNC => Cash N Carry
   # Wrapper around place_order to simplify placing a regular CNC order
   def place_cnc_order(tradingsymbol, transaction_type, quantity, price, order_type = "LIMIT", trigger_price = nil)
-    place_order("NSE", tradingsymbol, transaction_type, quantity, "CNC", order_type, price, trigger_price)
+    place_order("NFO", tradingsymbol, transaction_type, quantity, "NRML", order_type, price, trigger_price)
   end
 
   # Wrapper around modify_order to simplify modifying a regular CNC order
