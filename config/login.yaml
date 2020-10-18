@@ -1,0 +1,21 @@
+---
+- client1: 
+  :api_key: 7mv1fm34t9w7jxqy
+  :api_secret: bcmlycn98i7c6yjhqmiplanym2uys03e
+  :client: ZC6151
+  :login_url: https://kite.zerodha.com/connect/login?api_key=7mv1fm34t9w7jxqy
+  :otp: 123456
+  :password: asd@1234
+  :request_token: a6xV8JUXKmAsPLpt0bt2AH0JYD49hcZr
+  :access_token: 
+  :login_time: '2020-10-17 09:00:10'
+- client2: 
+  :api_key: f0sp6y6y9yey7okf
+  :api_secret: jyz4h6hil96jgyhkoudlk2gvb69gcmcm
+  :client: XI0687
+  :login_url: https://kite.zerodha.com/connect/login?api_key=f0sp6y6y9yey7okf
+  :otp: 123456
+  :password: asd@1234
+  :request_token: OarlXKKBADECcVjgjlD8MmnASIA0vrle
+  :access_token: 
+  :login_time: '2020-10-17 09:00:14'

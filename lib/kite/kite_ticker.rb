@@ -83,7 +83,6 @@ class KiteTicker
             divisor = 100.0
             divisor = 10000000.0 if segment == EXCHANGE_MAP[:cds]
 
-            # LTP packets
             if packet.size == 8
                 data << {
                   instrument_token: instrument_token,  
@@ -112,71 +111,21 @@ class KiteTicker
 
                 d = {
                     instrument_token: instrument_token,
-                    last_price: unpack_int(packet, 4, 8) / divisor,
-                    last_quantity: unpack_int(packet, 8, 12),
-                    average_price: unpack_int(packet, 12, 16) / divisor,
-                    volume: unpack_int(packet, 16, 20),
-                    buy_quantity: unpack_int(packet, 20, 24),
-                    sell_quantity: unpack_int(packet, 24, 28),
-                    ohlc: {
-                        open: unpack_int(packet, 28, 32) / divisor,
-                        high: unpack_int(packet, 32, 36) / divisor,
-                        low: unpack_int(packet, 36, 40) / divisor,
-                        close: unpack_int(packet, 40, 44) / divisor
-                    }
+                    last_price: unpack_int(packet, 4, 8) / divisor
                 }
-
-                # Compute the change price using close price and last price
-                d[:change] = 0
-                if d[:ohlc][:close] != 0
-                    d[:change] = (d[:last_price] - d[:ohlc][:close]) * 100 / d[:ohlc][:close]
-                end
-              end
+            end
 
                 # Parse full mode
-              if packet.size == 184
-                    begin
-                        last_trade_time = unpack_int(packet, 44, 48)
-                        daytime=Time.at(last_trade_time)
-                    rescue
-                        daytime = nil
-                    end
-
+            if packet.size == 184
                     begin
                         timestamp = unpack_int(packet, 60, 64)
                     rescue
                         timestamp = nil
                     end
 
-                    d[:last_trade_time] = last_trade_time
-                    d[:oi] = unpack_int(packet, 48, 52)
-                    d[:oi_day_high] = unpack_int(packet, 52, 56)
-                    d[:oi_day_low] = unpack_int(packet, 56, 60)
-                    d[:timestamp] = daytime
-
-                    # Market depth entries.
-                    depth = {
-                        buy: [],
-                        sell: []
-                    }
-
-                    # Compile the market depth lists.
-                    (64..packet.size).step(12).each_with_index do |i,p|
-                        e = {
-                            quantity: unpack_int(packet, p, p + 4),
-                            price: unpack_int(packet, p + 4, p + 8) / divisor,
-                            orders: unpack_int(packet, p + 8, p + 10, 'n*')
-                        }
-                        if i >= 5
-                          depth[:sell] << e 
-                        else
-                          depth[:buy] << e
-                        end
-
-                    d[:depth] = depth
-                    end
-                  data.append(d)
-                end
+                    d[:timestamp] = timestamp
+                    data.append(d)
+            end
           end
         data
      end

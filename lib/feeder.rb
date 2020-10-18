@@ -4,8 +4,8 @@ class Feeder
     @ticker = ticker    
     @logger = logger
     @today = Time.now.getlocal("+05:30").strftime "%Y:%m:%d"
-    @ticks = {"9:30"=>[21591,21400,21600,21592]}
-    #@ticks = {}      
+    @ticks = {}      
+    #@ticks = {"14:15"=>[21591,21400,21600,21592]}
     @bars = {}
     @d1=Time.strptime("09:13 +05:30","%H:%M %Z")
     @d2=Time.strptime("15:16 +05:30","%H:%M %Z")
@@ -47,7 +47,10 @@ class Feeder
   def fetch tick
     @logger.info tick
     tick.each do |hash_of_tick|
-      next unless hash_of_tick[:instrument_token].equal? @instrument 
+      unless hash_of_tick[:instrument_token].equal? @instrument
+        fetch_strike_tick hash_of_tick 
+        next
+      end 
       epoch = hash_of_tick[:timestamp]
       
       time_now=Time.at(epoch).getlocal("+05:30")
@@ -95,8 +98,14 @@ class Feeder
     time = hash[:time]
     @bars[time] ||= Bar.new @today
     @bars[time].add_bar_data @instrument,hash
+    @logger.info "Emitted Bar"
     emit bar: @bars[time]
   end
+
+  def fetch_strike_tick hash
+    emit strike: hash[:last_price]
+  end
+
 
   def close_ws
     @logger.info "signal:close received"

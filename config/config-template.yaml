@@ -1,9 +1,52 @@
 ---
-# Kite API key
-api_key:
+=====>config.yaml
+--- !ruby/object:OpenStruct
+table:
+  :telegram_bot: 
+  :chat_id: 
+  :strike_ce: 
+  :instrument_ce: 
+  :strike_pe: 
+  :instrument_pe: 
+  :quantity: 
+  :target_per_trade: 40
+  :exit_per_trade: -15
+  :target_per_day: 80
 
-# Kite API secret
-api_secret:
+====>levels.yaml
+---
+levels:
+ - 50000
+ - 24814
+ - 24435
+ - 0
 
-# Daily Request Token
-token:
+all_levels:
+ - 50000
+ - 32652
+ - 32604
+ - 32555
+ - 32501
+
+====>login.yaml
+---
+- client1: 
+  :api_key: 
+  :api_secret: 
+  :client: 
+  :login_url: 
+  :otp: 
+  :password: 
+  :request_token: 
+  :access_token: 
+  :login_time: 
+- client2: 
+  :api_key: 
+  :api_secret: 
+  :client: 
+  :login_url:
+  :otp: 
+  :password: 
+  :request_token: 
+  :access_token: 
+  :login_time: 
