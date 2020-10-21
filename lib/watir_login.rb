@@ -1,7 +1,8 @@
 require 'watir'
 require 'yaml'
 
-CLIENTS=YAML.load_file 'config/login.yaml'
+configs_file='./../config/login.yaml'
+CLIENTS=YAML.load_file configs_file
 browser = Watir::Browser.new :firefox, headless: true
 
 CLIENTS.each do |record|
@@ -30,4 +31,4 @@ CLIENTS.each do |record|
   record[:request_token] = request_token
 end
 
-File.open('config/login.yaml', 'w') {|f| f.write CLIENTS.to_yaml }
+File.open(configs_file, 'w') {|f| f.write CLIENTS.to_yaml }

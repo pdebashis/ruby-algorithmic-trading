@@ -2,6 +2,7 @@
 *.rbc
 /config/config.yaml
 /config/levels.yaml
+/config/login.yaml
 /coverage/
 /InstalledFiles
 /pkg/

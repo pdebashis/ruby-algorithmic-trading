@@ -35,8 +35,19 @@ class StrategyHighLow
     @instrument = 0
     @strike = ""
     @trade_target = 99999
+    @trade_exit = -99999
     @day_target = 99999
     @trade_flag=true
+  end
+
+  def book_pl_strike strike
+    profit= strike - @candle[2]
+    if profit > @trade_target or profit < @trade_exit
+      sell_position
+      @net_bnf+=profit
+      telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_bnf}"
+      reset_counters
+    end
   end
 
   def on_strike strike 
@@ -65,8 +76,6 @@ class StrategyHighLow
         close_day(closing)
       elsif time.eql? "15:0"
         telegram "MARKET CLOSED :: NET:#{@net_day};NET_BNF:#{@net_bnf}"
-      elsif time.eql? "9:0"
-        telegram "GLHF"
       else
         @levels=get_levels(closing) if @levels.empty?
         assign_candle(opening,high,low,closing) if @candle.empty?
@@ -91,7 +100,9 @@ class StrategyHighLow
     @day_target = config.target_per_day.to_i 
    
     if @trade_flag 
-      @user.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+      @users.each do |usr|
+        usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+      end
     end
 
     @feeder.subscribe(@instrument)
@@ -109,7 +120,9 @@ class StrategyHighLow
     @day_target = config.target_per_day.to_i  
     
     if @trade_flag
-      @user.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty? 
+      @users.each do |usr|
+       usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty? 
+      end
     end
  
     @feeder.subscribe(@instrument)
@@ -120,7 +133,9 @@ class StrategyHighLow
   def sell_position
     
     if @trade_flag
-      @user.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+      @users.each do |usr|
+        usr.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+      end
     end
     
     @feeder.unsubscribe(@instrument)
@@ -239,16 +254,6 @@ class StrategyHighLow
           @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
           reset_counters
         end
-    end
-  end
-
-  def book_pl_strike strike
-    profit= strike - @candle[2]
-    if profit > @trade_target or profit < @trade_exit
-      sell_position
-      @net_bnf+=profit
-      telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_bnf}"
-      reset_counters
     end
   end
 

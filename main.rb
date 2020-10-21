@@ -12,7 +12,7 @@ require 'yaml'
 APP=Logger.new('logs/app.log')
 DATA=Logger.new('logs/data.log')
 LOG1=Logger.new('logs/strategy_highlow.log', 'daily', 30)
-LOG2=Logger.new('logs/strategy_eliminate_sl.log', 'daily', 30)
+LOG2=Logger.new('logs/strategy_bigcandle.log', 'daily', 30)
 
 APP.formatter = proc do |severity, datetime, progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
@@ -56,5 +56,23 @@ kite_ticker = KiteTicker.new(traders.first.access_token,traders.first.api_key,AP
 feeder1 = Feeder.new(kite_ticker,DATA,260105)
 feeder2 = Feeder.new(kite_ticker,DATA,260105)
 
-strategy1 = StrategyHighLow.new(traders, feeder,LOG1)
-feeder1.start
+StrategyHighLow.new(traders, feeder1, LOG1)
+StrategyBigCandle.new(traders, feeder2, LOG2)
+
+highlow_pid = fork do
+  puts "Running HighLOw strategy"
+  feeder1.start  
+  exit
+end
+
+puts "The PID of the highlow process is #{highlow_pid}"
+
+bigcandle_pid = fork do
+  puts "Running BigCandle strategy"
+  feeder2.start
+  exit
+end
+
+puts "The PID of the bigcandle process is #{bigcandle_pid}"
+
+Process.waitall
