@@ -32,7 +32,7 @@ class StrategyBigCandle
     @trade_target = 9999
     @trade_exit = -9999
     @day_target = 9999
-    @trade_flag=false
+    @trade_flag=true
   end
 
   def on_bar bar
@@ -49,8 +49,9 @@ class StrategyBigCandle
       elsif time.eql? "15:0"
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
-        check_inside_candle(opening,high,low,closing)
-        check_big_candle(opening,high,low,closing)
+        return if @decision_map[:wait_sell]
+        check_inside_candle(opening,high,low,closing) if @decision_map[:big_candle]
+        check_big_candle(opening,high,low,closing) unless @decision_map[:big_candle]
       end
     end
   end
@@ -75,6 +76,7 @@ class StrategyBigCandle
   def reset_counters
     @decision_map[:big_candle]=false
     @decision_map[:wait_buy]= false
+    @decision_map[:wait_sell]=false
     @decision_map[:green] = nil 
     @decision_map[:stop_loss]=nil
     @decision_map[:trigger_price] = nil
@@ -87,7 +89,7 @@ class StrategyBigCandle
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message msg 
+    @telegram_bot.send_message "[bigcandle] #{msg}"
   end
 
   def is_big_candle?(o,h,l,c)
@@ -95,8 +97,9 @@ class StrategyBigCandle
   end
 
   def check_big_candle(o,h,l,c)
-    @decision_map[:big_candle] = false
+    return if @decision_map[:wait_sell]
     return unless is_big_candle?(o,h,l,c)
+    reset_counters
     @decision_map[:big_candle]=true
     @decision_map[:green] = o < c ? true : false
     if @decision_map[:green]
@@ -111,14 +114,14 @@ class StrategyBigCandle
   end
 
   def check_inside_candle(o,h,l,c)
-    if @decision_map[:big_candle]
-      if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
-        telegram "INSIDE CANDLE FORMED"
-        @logger.info "DECISION MAP : #{@decision_map}"
-        @decision_map[:wait_buy]=true
-      end
+    if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
+      telegram "INSIDE CANDLE FORMED"
+      @decision_map[:wait_buy]=true
+      @logger.info "DECISION MAP : #{@decision_map}"
     else
+      @logger.info "BREAKOUT OF RANGE"
       reset_counters
+      check_big_candle(o,h,l,c)
     end
   end
 
@@ -143,7 +146,7 @@ class StrategyBigCandle
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
-    telegram "ORDER PLACED FOR #{@strike} at #{ltp_value} ; TARGET: #{target_value} ; SL: #{sl_value}"
+    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value} ; TARGET: #{target_value} ; SL: #{sl_value}"
     @decision_map[:wait_buy]=false
     @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
@@ -170,7 +173,7 @@ class StrategyBigCandle
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
-    telegram "ORDER PLACED FOR #{@strike} at #{ltp_value}; TARGET: #{target_value} ; SL: #{sl_value}"
+    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value} ; SL: #{sl_value}"
     @decision_map[:wait_buy]=false
     @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
@@ -191,7 +194,6 @@ class StrategyBigCandle
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
 
-    telegram "SOLD #{@strike} at #{ltp_value}"
     @instument = 0
     @strike = ""
   end
@@ -200,16 +202,14 @@ class StrategyBigCandle
     profit= strike - @decision_map[:ltp_at_buy]
     if profit > @trade_target or profit < @trade_exit
       sell_position
-      @net_day+=profit
-      telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_day}"
+      telegram "TRADE CAP REACHED(#{profit}); NET_BNF:#{@net_day}"
       reset_counters
     end
   end
 
   def close_day close
-    profit= close - @decision_map[:ltp_at_buy]
+    return unless @decision_map[:wait_sell]
     sell_position
-    @net_day+=profit
     telegram "MARKET CLOSE REACHED, SELLING POSITION NET_BNF:#{@net_day}"
     reset_counters
   end

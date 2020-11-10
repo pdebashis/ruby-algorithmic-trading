@@ -37,7 +37,7 @@ class StrategyHighLow
     @trade_target = 99999
     @trade_exit = -99999
     @day_target = 99999
-    @trade_flag=true
+    @trade_flag=false
   end
 
   def book_pl_strike strike
@@ -87,7 +87,7 @@ class StrategyHighLow
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message msg 
+    @telegram_bot.send_message "[highlow] #{msg}" 
   end
 
   def buy_ce
@@ -241,7 +241,7 @@ class StrategyHighLow
           ltp=sell_position
           diffe2 = ltp - @candle[2]
           @net_bnf+=diffe2
-          telegram "TARGET HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+          telegram "TARGET HIT:#{diffe};strike:#{ltp};BNF_POINTS:#{diffe2}"
           @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
           reset_counters
         elsif tick < @stop_loss
@@ -250,7 +250,7 @@ class StrategyHighLow
           ltp=sell_position
           diffe2 = ltp - @candle[2]
           @net_bnf+=diffe2
-          telegram "STOPLOSS HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+          telegram "STOPLOSS HIT:#{diffe};strike:#{ltp};BNF_POINTS:#{diffe2}"
           @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
           reset_counters
         end
@@ -264,12 +264,12 @@ class StrategyHighLow
       differen = @candle[3] - close
       ltp=sell_position
       diffe2 = ltp - @candle[2]
-      telegram "END TRADE:#{differen};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+      telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
     elsif @candle[4] == "BUY"
       differen = close - @candle[3]
       ltp=sell_position
       diffe2 = ltp - @candle[2]
-      telegram "END TRADE:#{differen};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
+      telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
     end
     @net_day+=differen
     @net_bnf+=diffe2

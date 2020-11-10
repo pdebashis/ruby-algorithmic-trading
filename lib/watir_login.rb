@@ -20,7 +20,10 @@ CLIENTS.each do |record|
   sleep(1)
 
   browser.input(id: "pin").send_keys otp 
-  browser.button(:visible_text => "Continue").click
+  begin
+    browser.button(:visible_text => "Continue").click
+  rescue
+  end
   sleep(1)
 
   puts browser.url
