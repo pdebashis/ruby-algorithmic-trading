@@ -157,9 +157,9 @@ class StrategyBigCandle
     @instrument = config.instrument_pe.to_s
     @strike = config.strike_pe
     @quantity = config.quantity
-    @trade_target = config.target_per_trade.to_i
-    @trade_exit = config.exit_per_trade.to_i
-    @day_target = config.target_per_day.to_i  
+    @trade_target = config.bigcandle_target_per_trade.to_i
+    @trade_exit = config.bigcandle_exit_per_trade.to_i
+    @day_target = config.bigcandle_target_per_day.to_i  
     
     if @trade_flag
       @users.each do |usr|
