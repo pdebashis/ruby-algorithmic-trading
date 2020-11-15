@@ -48,7 +48,7 @@ class StrategyBigCandle
         @net_day=0
         p @net_year
       elsif time.eql? "15:00"
-        @logger.info "MARKET CLOSED :: NET:#{@net_day}"
+        @logger.info "MARKET CLOSED"
       elsif time.eql? "15:15" or time.eql? "15:30" or time.eql? "15:45"
         @logger.info "----"
       else
@@ -62,9 +62,9 @@ class StrategyBigCandle
   def on_tick tick
     if @decision_map[:wait_buy]
       if @decision_map[:green]
-        buy_ce if tick > @decision_map[:trigger_price]  
+        buy_ce if tick > @decision_map[:trigger_price] && @decision_map[:size] < 100 
       else
-        buy_pe if tick < @decision_map[:trigger_price]
+        buy_pe if tick < @decision_map[:trigger_price] && @decision_map[:size] < 100
       end 
     end
 
@@ -93,10 +93,11 @@ class StrategyBigCandle
     @decision_map[:ltp_at_buy]=nil
     @decision_map[:big_candle_high]=0
     @decision_map[:big_candle_low]=0
+    @decision_map[:size]=0
   end
 
   def is_big_candle?(o,h,l,c)
-    return true if (o-c).abs > 50
+    return true if (h-l).abs > 60 && (o-c).abs > 40
   end
 
   def check_big_candle(o,h,l,c)
@@ -104,6 +105,7 @@ class StrategyBigCandle
     return if @decision_map[:wait_sell]
     return unless is_big_candle?(o,h,l,c)
     reset_counters
+    @decision_map[:size]=(h-l).abs
     @decision_map[:big_candle]=true
     @decision_map[:green] = o < c ? true : false
     if @decision_map[:green]
@@ -120,10 +122,23 @@ class StrategyBigCandle
   def check_inside_candle(o,h,l,c)
     if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
       @logger.info "INSIDE CANDLE FORMED"
+      if @decision_map[:size] > 100
+        @decision_map[:stop_loss]= @decision_map[:green] ? l : h
+      end
       @decision_map[:wait_buy]=true
       @logger.info "DECISION MAP : #{@decision_map}"
     else
       @logger.info "BREAKOUT OF RANGE"
+    
+      if @decision_map[:wait_buy] 
+      if @decision_map[:green]
+        buy_ce if c > @decision_map[:trigger_price] && @decision_map[:size] > 100 
+        return if c > @decision_map[:trigger_price] && @decision_map[:size] > 100
+      else
+        buy_pe if c < @decision_map[:trigger_price] && @decision_map[:size] > 100
+        return if c < @decision_map[:trigger_price] && @decision_map[:size] > 100
+      end
+      end
       reset_counters
       check_big_candle(o,h,l,c)
     end

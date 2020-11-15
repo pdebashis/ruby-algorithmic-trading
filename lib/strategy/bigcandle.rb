@@ -64,6 +64,16 @@ class StrategyBigCandle
         buy_pe if tick < @decision_map[:trigger_price]
       end 
     end
+
+    if @decision_map[:wait_sell]
+      if @decision_map[:green]
+        sell_position if tick < @decision_map[:stop_loss] 
+        sell_position if tick > @decision_map[:target_price]
+      else
+        sell_positon if tick > @decision_map[:stop_loss]
+        sell_position if tick < @decision_map[:target_price]
+      end
+    end
   end
 
   def on_strike strike
@@ -80,6 +90,7 @@ class StrategyBigCandle
     @decision_map[:green] = nil 
     @decision_map[:stop_loss]=nil
     @decision_map[:trigger_price] = nil
+    @decision_map[:target_price] = nil
     @decision_map[:ltp_at_buy]=nil
     if @net_day > @day_target and @trade_flag
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
@@ -93,7 +104,7 @@ class StrategyBigCandle
   end
 
   def is_big_candle?(o,h,l,c)
-    return true if (o-c).abs > 50
+    return true if (o-c).abs > 40 and (h-l).abs > 60
   end
 
   def check_big_candle(o,h,l,c)
@@ -108,6 +119,7 @@ class StrategyBigCandle
       telegram "BIG RED CANDLE FORMED"
     end
     @decision_map[:trigger_price] = @decision_map[:green] ? h : l
+    @decision_map[:target_price] = @decision_map[:green] ? h + 150 : l - 150
     @decision_map[:stop_loss]= @decision_map[:green] ? l : h
     @decision_map[:big_candle_high]=h
     @decision_map[:big_candle_low]=l
@@ -150,6 +162,7 @@ class StrategyBigCandle
     @decision_map[:wait_buy]=false
     @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
+    @logger.info "DECISION MAP : #{@decision_map}"
   end
 
   def buy_pe
@@ -177,6 +190,7 @@ class StrategyBigCandle
     @decision_map[:wait_buy]=false
     @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
+    @logger.info "DECISION MAP : #{@decision_map}"
   end
 
   def sell_position

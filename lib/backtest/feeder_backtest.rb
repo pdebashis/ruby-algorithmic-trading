@@ -83,6 +83,9 @@ class Feeder
 end
 
 LOG=Logger.new('results/bigcandle_backtest.log', 'daily', 30)
+LOG.formatter = proc do |severity, datetime, progname, msg|
+  "#{msg}\n"
+end
 
 a=Feeder.new 
 StrategyBigCandle.new(a, LOG)
