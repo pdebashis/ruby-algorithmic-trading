@@ -1,6 +1,6 @@
 class StrategyHighLow
   def initialize traders, feeder, logger=nil
-    @user = traders.first
+    @user = traders.first[:kite_api]
     @users = traders
     @feeder = feeder
     Frappuccino::Stream.new(feeder).
@@ -87,7 +87,7 @@ class StrategyHighLow
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message "[highlow] #{msg}" 
+    #@telegram_bot.send_message "[highlow] #{msg}" 
   end
 
   def buy_ce
@@ -101,7 +101,8 @@ class StrategyHighLow
    
     if @trade_flag 
       @users.each do |usr|
-        usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+        kite_usr=usr[:kite_api]
+        kite_usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
       end
     end
 
@@ -121,7 +122,8 @@ class StrategyHighLow
     
     if @trade_flag
       @users.each do |usr|
-       usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty? 
+       kite_usr=usr[:kite_api]
+       kite_usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty? 
       end
     end
  
@@ -134,7 +136,8 @@ class StrategyHighLow
     
     if @trade_flag
       @users.each do |usr|
-        usr.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+        kite_usr=usr[:kite_api]
+        kite_usr.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
       end
     end
     

@@ -1,6 +1,6 @@
 class StrategyBigCandle
   def initialize traders, feeder, logger=nil
-    @user = traders.first
+    @user = traders.first[:kite_api]
     @users = traders
     @feeder = feeder
     Frappuccino::Stream.new(feeder).
@@ -50,8 +50,11 @@ class StrategyBigCandle
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         return if @decision_map[:wait_sell]
-        check_inside_candle(opening,high,low,closing) if @decision_map[:big_candle]
-        check_big_candle(opening,high,low,closing) unless @decision_map[:big_candle]
+        if @decision_map[:big_candle]
+          check_inside_candle(opening,high,low,closing)
+        else
+          check_big_candle(opening,high,low,closing)
+        end
       end
     end
   end
@@ -92,6 +95,7 @@ class StrategyBigCandle
     @decision_map[:trigger_price] = nil
     @decision_map[:target_price] = nil
     @decision_map[:ltp_at_buy]=nil
+    @decision_map[:size]=0
     if @net_day > @day_target and @trade_flag
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
       @trade_flag=false
@@ -108,10 +112,10 @@ class StrategyBigCandle
   end
 
   def check_big_candle(o,h,l,c)
-    return if @decision_map[:wait_sell]
     return unless is_big_candle?(o,h,l,c)
     reset_counters
     @decision_map[:big_candle]=true
+    @decision_map[:size]=(h-l).abs
     @decision_map[:green] = o < c ? true : false
     if @decision_map[:green]
       telegram "BIG GREEN CANDLE FORMED"
@@ -129,7 +133,6 @@ class StrategyBigCandle
     if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
       telegram "INSIDE CANDLE FORMED"
       @decision_map[:wait_buy]=true
-      @logger.info "DECISION MAP : #{@decision_map}"
     else
       @logger.info "BREAKOUT OF RANGE"
       reset_counters
@@ -148,7 +151,9 @@ class StrategyBigCandle
    
     if @trade_flag 
       @users.each do |usr|
-        usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty?
+        kite_usr=usr[:kite_api]
+        lot_size=usr[:lot_size]
+        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
       end
     end
 
@@ -176,7 +181,9 @@ class StrategyBigCandle
     
     if @trade_flag
       @users.each do |usr|
-       usr.place_cnc_order(@strike, "BUY", @quantity, nil, "MARKET") unless @strike.empty? 
+        kite_usr=usr[:kite_api]
+        lot_size=usr[:lot_size]
+        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty? 
       end
     end
 
@@ -194,19 +201,23 @@ class StrategyBigCandle
   end
 
   def sell_position
-    
     if @trade_flag
       @users.each do |usr|
-        usr.place_cnc_order(@strike, "SELL", @quantity, nil, "MARKET") unless @strike.empty?
+        kite_usr=usr[:kite_api]
+        lot_size=usr[:lot_size]
+        kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
       end
     end
-   
+
     @decision_map[:wait_sell]=false
     @feeder.unsubscribe(@instrument)
     ltp = @user.ltp(@instrument)
+    ltp_value = 0
     ltp_value = ltp.values.first["last_price"] unless ltp.values.empty? 
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
+
+    telegram "SELLING #{@strike} at #{ltp}; POINTS: #{difference}" 
 
     @instument = 0
     @strike = ""

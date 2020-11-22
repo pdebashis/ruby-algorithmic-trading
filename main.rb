@@ -47,11 +47,20 @@ CLIENTS.each do |client|
     client[:access_token] = kite_connect.access_token
     client[:login_time] = login_details["login_time"]
   end
-  traders<<kite_connect
+  traders<< {kite_api: kite_connect, lot_size: client[:lot_size], client_id: client[:client]}
 end
 File.open('config/login.yaml', 'w') {|f| f.write CLIENTS.to_yaml }
 
-kite_ticker = KiteTicker.new(traders.first.access_token,traders.first.api_key,APP)
+ticker_user = traders.first[:kite_api]
+kite_ticker = KiteTicker.new(ticker_user.access_token,ticker_user.api_key,APP)
+
+telegram_bot=TelegramBot.new
+intro_msg="GLHF\n"
+traders.each do |trader|
+  intro_msg += "ID:#{trader[:client_id]}:Lotsize:#{trader[:lot_size]}\n" 
+  APP.info "ID:#{trader[:client_id]}:Lotsize:#{trader[:lot_size]}"
+end
+telegram_bot.send_message intro_msg
 
 feeder1 = Feeder.new(kite_ticker,DATA,260105)
 feeder2 = Feeder.new(kite_ticker,DATA,260105)
@@ -60,7 +69,7 @@ StrategyHighLow.new(traders, feeder1, LOG1)
 StrategyBigCandle.new(traders, feeder2, LOG2)
 
 highlow_pid = fork do
-  puts "Running HighLOw strategy"
+  puts "Running HighLow strategy"
   feeder1.start  
   exit
 end
