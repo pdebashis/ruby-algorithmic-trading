@@ -12,19 +12,22 @@ CLIENTS.each do |record|
   otp=record[:otp]
 
   browser.goto url
-  sleep(1)
-  browser.input(id: "userid").send_keys client
-  browser.input(id: "password").send_keys password
-
+  sleep 1
+  begin  
+    browser.input(id: "userid").send_keys client
+    browser.input(id: "password").send_keys password
+  rescue
+    record[:access_token] = nil
+    record[:request_token] = "API-ERROR"
+    next
+  end
   browser.button(:visible_text => "Login").click
-  sleep(1)
 
   browser.input(id: "pin").send_keys otp 
   begin
     browser.button(:visible_text => "Continue").click
   rescue
   end
-  sleep(1)
 
   puts browser.url
 

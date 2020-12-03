@@ -12,6 +12,8 @@ class Feeder
     @instrument=instrument
   end
 
+  attr_accessor :instrument  
+
   def start
     EventMachine.run do
       @ticker.ws = Faye::WebSocket::Client.new(@ticker.socket_url)

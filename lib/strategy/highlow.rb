@@ -31,7 +31,8 @@ class StrategyHighLow
 
     @net_day=0
     @net_bnf=0
-    
+   
+    @index = @feeder.instrument.to_s
     @instrument = 0
     @strike = ""
     @trade_target = 99999
@@ -92,9 +93,9 @@ class StrategyHighLow
 
   def buy_ce
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @instrument = config.instrument_ce.to_s
-    @strike = config.strike_ce
-    @quantity = config.quantity
+    @instrument = config[@index][:instrument_ce].to_s
+    @strike = config[@index][:strike_ce]
+    @quantity = config[@index][:quantity]
     @trade_target = config.target_per_trade.to_i
     @trade_exit = config.exit_per_trade.to_i 
     @day_target = config.target_per_day.to_i 
@@ -113,9 +114,9 @@ class StrategyHighLow
 
   def buy_pe
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @instrument = config.instrument_pe.to_s
-    @strike = config.strike_pe
-    @quantity = config.quantity
+    @instrument = config[@index][:instrument_pe].to_s
+    @strike = config[@index][:strike_pe]
+    @quantity = config[@index][:quantity]
     @trade_target = config.target_per_trade.to_i
     @trade_exit = config.exit_per_trade.to_i
     @day_target = config.target_per_day.to_i  

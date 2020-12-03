@@ -4,14 +4,26 @@
 table:
   :telegram_bot: 
   :chat_id: 
-  :strike_ce: 
-  :instrument_ce: 
-  :strike_pe: 
-  :instrument_pe: 
-  :quantity: 
-  :target_per_trade: 40
-  :exit_per_trade: -15
-  :target_per_day: 80
+  :target_per_trade: 
+  :exit_per_trade: 
+  :target_per_day:
+  :bigcandle_target_per_trade: 
+  :bigcandle_exit_per_trade: 
+  :bigcandle_target_per_day: 
+  :260105:
+    :big_candle_size: 
+    :strike_ce: 
+    :instrument_ce: 
+    :strike_pe: 
+    :instrument_pe: 
+    :quantity:
+  :256265:
+    :big_candle_size: 
+    :strike_ce: 
+    :instrument_ce: 
+    :strike_pe: 
+    :instrument_pe: 
+    :quantity: 
 
 ====>levels.yaml
 ---

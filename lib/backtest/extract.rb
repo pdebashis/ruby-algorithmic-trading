@@ -6,8 +6,8 @@ class ExtractCandles
   attr_reader :url
 
   def initialize()
-    @from_date="2020-07-02"
-    @to_date="2020-09-01"
+    @from_date="2019-07-01"
+    @to_date="2019-12-31"
     @user="NC7756"
     @authorizaton="enctoken 9PVOxnmGDAbNxwRmImrJpmSXyYuZoZ12bJ/Wm215Jiv1goMKLbTMoL0J9yNiu/9u6x4s92m9eMyjgdy9KoGC3chrgaFtHg=="
   end

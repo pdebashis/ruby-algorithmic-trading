@@ -1,4 +1,4 @@
-class StrategyBigCandle
+class StrategyBigCandleClosing
   def initialize traders, feeder, logger=nil
     @user = traders.first[:kite_api]
     @users = traders
@@ -33,11 +33,7 @@ class StrategyBigCandle
     @trade_target = 9999
     @trade_exit = -9999
     @day_target = 9999
-    @trade_flag=true
-    
-    config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @hl_height = config[@index][:big_candle_size].to_i
-    @oc_height = @hl_height/2 
+    @trade_flag=false
   end
 
   def on_bar bar
@@ -65,7 +61,7 @@ class StrategyBigCandle
   end
 
   def on_tick tick
-    if @decision_map[:wait_buy]
+    if @decision_map[:wait_buy] && @decision_map[:size] < 100
       if @decision_map[:green]
         buy_ce if tick > @decision_map[:trigger_price]  
       else
@@ -109,11 +105,11 @@ class StrategyBigCandle
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message "[bigcandle] #{msg}"
+    #@telegram_bot.send_message "[bigcandle] #{msg}"
   end
 
   def is_big_candle?(o,h,l,c)
-    return true if (o-c).abs > @oc_height and (h-l).abs > @hl_height
+    return true if (o-c).abs > 40 and (h-l).abs > 60
   end
 
   def check_big_candle(o,h,l,c)
@@ -136,10 +132,24 @@ class StrategyBigCandle
 
   def check_inside_candle(o,h,l,c)
     if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
+      if @decision_map[:size] > 100
+        @decision_map[:stop_loss]= @decision_map[:green] ? l : h
+      end
+
       telegram "INSIDE CANDLE FORMED"
       @decision_map[:wait_buy]=true
     else
       @logger.info "BREAKOUT OF RANGE"
+
+      if @decision_map[:wait_buy] && @decision_map[:size] > 100
+      if @decision_map[:green]
+        buy_ce if c > @decision_map[:trigger_price] 
+        return if c > @decision_map[:trigger_price]
+      else
+        buy_pe if c < @decision_map[:trigger_price]
+        return if c < @decision_map[:trigger_price]
+      end
+      end
       
       reset_counters
       check_big_candle(o,h,l,c)
