@@ -1,5 +1,5 @@
 require_relative '../bar'
-require_relative 'bigcandle'
+require_relative 'orb'
 require 'frappuccino'
 require 'logger'
 require 'yaml'
@@ -11,7 +11,7 @@ class Feeder
 
   def initialize 
     
-    data_file_path="2020.csv"
+    data_file_path="2019_2020.csv"
     targets_file_path="./../../config/levels.yaml"
 
     raise "Source file not found" unless File.file? data_file_path
@@ -90,5 +90,5 @@ LOG.formatter = proc do |severity, datetime, progname, msg|
 end
 
 a=Feeder.new 
-StrategyBigCandle.new(a, LOG)
+StrategyOrb.new(a, LOG)
 a.start

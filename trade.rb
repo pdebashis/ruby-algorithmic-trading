@@ -47,9 +47,6 @@ CLIENTS.each do |client|
     kite_connect.set_access_token(client[:access_token])
     APP.info "Using ACCESS TOKEN From Database"
   else
-    puts client[:client]
-    puts client[:request_token]
-    puts client[:api_secret]
     begin
       login_details=kite_connect.generate_access_token(client[:request_token], client[:api_secret])
     rescue
@@ -67,7 +64,7 @@ ticker_user = traders.first[:kite_api]
 kite_ticker = KiteTicker.new(ticker_user.access_token,ticker_user.api_key,APP)
 
 telegram_bot=TelegramBot.new
-intro_msg="GLHF banknifty traders\n"
+intro_msg="GLHF\n"
 traders.each do |trader|
   intro_msg += "ID:#{trader[:client_id]}:Lotsize:#{trader[:lot_size]}\n" 
   APP.info intro_msg

@@ -24,7 +24,7 @@ class StrategyBigCandle
     @quantity=0
     @levels=[]
     @decision_map={:big_candle => false, :trigger_price => 0, :wait_buy => false, :wait_sell => false}
-
+    @orb_decision_map={:wait_buy => false, :wait_sell => false}
     @net_day=0
   
     @index = @feeder.instrument.to_s 
@@ -54,7 +54,8 @@ class StrategyBigCandle
       elsif time.eql? "15:0"
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
-        return if @decision_map[:wait_sell]
+        check_orb(high,low,time)
+        return if @decision_map[:wait_sell] or @orb_decision_map[:wait_sell]
         if @decision_map[:big_candle]
           check_inside_candle(opening,high,low,closing)
         else
@@ -110,6 +111,21 @@ class StrategyBigCandle
   def telegram msg
     @logger.info msg
     @telegram_bot.send_message "[bigcandle] #{msg}"
+  end
+
+  def check_orb(high,low,time)
+    return unless time.eql? "09:15"
+
+    orb_size=(low-high).abs
+    if orb_size <= 150
+       telegram "ORB candle formed;length=#{orb_size}"
+       @orb_decision_map[:high]=high
+       @orb_decision_map[:low]=low
+       @orb_decision_map[:wait_buy]=true
+    else
+       @orb_decision_map[:wait_buy]=false
+       telegram "ORB candle notformed;length=#{orb_size}"
+    end
   end
 
   def is_big_candle?(o,h,l,c)
