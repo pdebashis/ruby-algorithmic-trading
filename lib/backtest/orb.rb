@@ -73,7 +73,7 @@ class StrategyOrb
         @orb_decision_map[:trigger]=@orb_decision_map[:low]
         @orb_decision_map[:target]=@orb_decision_map[:trigger]-300
         @orb_decision_map[:buy]=false
-        @orb_decision_map[:stoploss]=@orb_decision_map[:trigger]-80
+        @orb_decision_map[:stoploss]=@orb_decision_map[:trigger]+80
         orb_buy_pe
       end
     end
@@ -119,7 +119,7 @@ class StrategyOrb
     return unless time.eql? "09:15"
       
     orb_size=(low-high).abs
-    if orb_size <= 150
+    if orb_size <= 150 && orb_size >= 50 
        @logger.info "ORB candle formed #{orb_size}"
        @orb_decision_map[:high]=high
        @orb_decision_map[:low]=low

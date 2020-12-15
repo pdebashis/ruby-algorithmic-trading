@@ -5,7 +5,7 @@ class Feeder
     @logger = logger
     @today = Time.now.getlocal("+05:30").strftime "%Y:%m:%d"
     @ticks = {}      
-    #@ticks = {"14:15"=>[21591,21400,21600,21791]}
+    #@ticks = {"09:15"=>[21591,21400,21600,21791]}
     @bars = {}
     @d1=Time.strptime("09:13 +05:30","%H:%M %Z")
     @d2=Time.strptime("15:16 +05:30","%H:%M %Z")

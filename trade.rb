@@ -67,8 +67,9 @@ telegram_bot=TelegramBot.new
 intro_msg="GLHF\n"
 traders.each do |trader|
   intro_msg += "ID:#{trader[:client_id]}:Lotsize:#{trader[:lot_size]}\n" 
-  APP.info intro_msg
 end
+
+APP.info intro_msg
 telegram_bot.send_message intro_msg
 
 feeder1 = Feeder.new(kite_ticker,DATA,260105)
@@ -90,7 +91,7 @@ end
 puts "The PID of the highlow process is #{highlow_pid}"
 
 bigcandle_pid = fork do
-  puts "Running BigCandle strategy"
+  puts "Running BigCandle strategy for banknifty"
   feeder2.start
   exit
 end
@@ -105,12 +106,12 @@ end
 
 puts "The PID of the bigcandle process is #{bigcandle_closing_pid}"
 
-bigcandle2_closing_pid = fork do
-  puts "Running BigCandle Closing strategy"
+bigcandle2_pid = fork do
+  puts "Running BigCandle strategy for nifty50"
   feeder4.start
   exit
 end
 
-puts "The PID of the bigcandle2 process is #{bigcandle2_closing_pid}"
+puts "The PID of the bigcandle2 is #{bigcandle2_pid}"
 
 Process.waitall
