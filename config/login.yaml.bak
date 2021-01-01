@@ -1,0 +1,45 @@
+---
+- Murgan_ID: 
+  :api_key: nohqei48z8ubi9uh
+  :api_secret: o43iom2tpdyqf23djhxcijvczufcn1k2
+  :client: TE1068
+  :login_url: https://kite.zerodha.com/connect/login?api_key=nohqei48z8ubi9uh
+  :otp: 123456
+  :password: asd@1234
+  :request_token: rgsEt8W59mcEYCIVd4S3NVKWJtFxW1ln
+  :access_token: 2yJDQKWilk5O9mMS32QK6BeYvSa4oj2P
+  :login_time: '2020-12-18 09:00:09'
+  :lot_size: 2
+- Abhishek_ID: 
+  :api_key: gzqe6mkao9jmzehh
+  :api_secret: ixi411od9mhw899uhcc67t3ayw9wp8jl
+  :client: UP9405
+  :login_url: https://kite.zerodha.com/connect/login?api_key=gzqe6mkao9jmzehh
+  :otp: 123456
+  :password: asd@1234
+  :request_token: IeF6xbmUPNWX1yGRlZs4veVhv05zL4qm
+  :access_token: rMiXORkRJWwsPeeavHhfyVrCyxKwItB0
+  :login_time: '2020-12-18 09:00:12'
+  :lot_size: 1
+- Prabin_ID: 
+  :api_key: sdrivw1tlz2geg9s
+  :api_secret: vip2forub1skxrbsnx5lke7yxknctval
+  :client: DN2156
+  :login_url: https://kite.zerodha.com/connect/login?api_key=sdrivw1tlz2geg9s
+  :otp: 123456
+  :password: asd@1234
+  :request_token: lBIWpLp4bWF64nGtgUari52nqTR1RWbc
+  :access_token: d4oBWs0f5YpXqFN8MenH7ZBS7JHG8u82
+  :login_time: '2020-12-18 09:00:15'
+  :lot_size: 3
+- Pruthiviraj_ID: 
+  :api_key: ydh2c2re2925vaiw
+  :api_secret: mvhy58wd1zh94kvcfgyyvuj6ewyzeg5r
+  :client: YD7348
+  :login_url: https://kite.zerodha.com/connect/login?api_key=ydh2c2re2925vaiw
+  :otp: 123456
+  :password: asd@1234
+  :request_token: 5eMFZ6Mk7UTMcgwmKc53adPS4UUcxcas
+  :access_token: 60r82btRwrADp0Zoz2QPvEmdyQ0OeGC2
+  :login_time: '2020-12-18 09:00:17'
+  :lot_size: 1

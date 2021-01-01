@@ -38,6 +38,7 @@ class StrategyBigCandle
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @hl_height = config[@index][:big_candle_size].to_i
     @oc_height = @hl_height/2 
+    @day_target = config[@index][:target_per_day]
   end
 
   def on_bar bar
@@ -55,7 +56,7 @@ class StrategyBigCandle
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         check_orb(high,low,time)
-        return if @decision_map[:wait_sell] or @orb_decision_map[:wait_sell]
+        return if @decision_map[:wait_sell] or @orb_decision_map[:wait_buy] or @orb_decision_map[:wait_sell]
         if @decision_map[:big_candle]
           check_inside_candle(opening,high,low,closing)
         else
@@ -197,9 +198,8 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config.bigcandle_target_per_trade.to_i
-    @trade_exit = config.bigcandle_exit_per_trade.to_i 
-    @day_target = config.bigcandle_target_per_day.to_i 
+    @trade_target = config[:index][:target_per_trade]
+    @trade_exit = config[:index][:exit_per_trade]
    
     if @trade_flag 
       @users.each do |usr|
@@ -227,10 +227,9 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config.bigcandle_target_per_trade.to_i
-    @trade_exit = config.bigcandle_exit_per_trade.to_i
-    @day_target = config.bigcandle_target_per_day.to_i  
-    
+    @trade_target = config[:index][:target_per_trade]
+    @trade_exit = config[:index][:exit_per_trade]   
+ 
     if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
@@ -257,9 +256,8 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config.orb_target_per_trade.to_i
-    @trade_exit = config.orb_exit_per_trade.to_i
-    @day_target = config.bigcandle_target_per_day.to_i
+    @trade_target = config[:index][:orb_target]
+    @trade_exit = config[:index][:orb_exit]
 
     if @trade_flag
       @users.each do |usr|
@@ -270,8 +268,8 @@ class StrategyBigCandle
     end
 
     ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
-    @decision_map[:ltp_at_buy]=ltp_value
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
+    @decision_map[:ltp_at_buy]=ltp_value || 0
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
@@ -287,9 +285,8 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config.orb_target_per_trade.to_i
-    @trade_exit = config.orb_exit_per_trade.to_i
-    @day_target = config.bigcandle_target_per_day.to_i
+    @trade_target = config[:index][:orb_target]
+    @trade_exit = config[:index][:orb_exit]
 
     if @trade_flag
       @users.each do |usr|
@@ -300,8 +297,8 @@ class StrategyBigCandle
     end
 
     ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
-    @decision_map[:ltp_at_buy]=ltp_value
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
+    @decision_map[:ltp_at_buy]=ltp_value || 0
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
@@ -326,8 +323,7 @@ class StrategyBigCandle
 
     @feeder.unsubscribe(@instrument)
     ltp = @user.ltp(@instrument)
-    ltp_value = 0
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty? 
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
 

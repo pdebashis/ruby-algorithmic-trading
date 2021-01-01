@@ -53,7 +53,7 @@ class StrategyOrb
         @logger.info "----"
       else
         check_orb(high,low,time)
-        return if @decision_map[:wait_sell] or @orb_decision_map[:wait_sell]
+        return if @decision_map[:wait_sell] or @orb_decision_map[:wait_sell] or @orb_decision_map[:wait_sell]
         check_inside_candle(opening,high,low,closing) if @decision_map[:big_candle]
         check_big_candle(opening,high,low,closing) unless @decision_map[:big_candle]
       end

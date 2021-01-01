@@ -15,7 +15,7 @@ DATA=Logger.new('logs/data.log')
 LOG1=Logger.new('logs/strategy_highlow.log', 'weekly', 30)
 LOG2=Logger.new('logs/strategy_bigcandle.log', 'weekly', 30)
 LOG3=Logger.new('logs/strategy_bigcandle_closing.log', 'weekly', 30)
-LOG4=Logger.new('logs/strategy_bigcandle2.log', 'weekly', 30)
+LOG4=Logger.new('logs/strategy_bigcandle_nifty.log', 'weekly', 30)
 
 APP.formatter = proc do |severity, datetime, progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
