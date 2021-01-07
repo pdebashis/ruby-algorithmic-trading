@@ -1,7 +1,5 @@
 --- TODO
  - Exception handing when APIs are called, eg. ltp quote 
- - if big candle (green,red), then skip the first target and stoploss to be dynamic. (starting from low of big candle)
- - if same color big candle (green,red), target is jumped and stop loss is dynamic.
- - if opposite big candle (green,red) while holding position, close the existing trade. Make a new trade of opposite direction.
+ - negetive stop loss, then skip trade
  - web socket reconnection
- - support backtesting
+ - reports generation

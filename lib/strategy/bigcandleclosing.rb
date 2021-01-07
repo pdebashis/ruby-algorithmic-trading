@@ -161,8 +161,8 @@ class StrategyBigCandleClosing
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:target_per_trade]
-    @trade_exit = config[:index][:exit_per_trade] 
+    @trade_target = config[@index][:target_per_trade]
+    @trade_exit = config[@index][:exit_per_trade] 
    
     if @trade_flag 
       @users.each do |usr|
@@ -190,8 +190,8 @@ class StrategyBigCandleClosing
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:target_per_trade]
-    @trade_exit = config[:index][:exit_per_trade]
+    @trade_target = config[@index][:target_per_trade]
+    @trade_exit = config[@index][:exit_per_trade]
     
     if @trade_flag
       @users.each do |usr|

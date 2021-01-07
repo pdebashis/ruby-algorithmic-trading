@@ -12,10 +12,10 @@ require 'yaml'
 
 APP=Logger.new('logs/app.log')
 DATA=Logger.new('logs/data.log')
-LOG1=Logger.new('logs/strategy_highlow.log', 'weekly', 30)
-LOG2=Logger.new('logs/strategy_bigcandle.log', 'weekly', 30)
-LOG3=Logger.new('logs/strategy_bigcandle_closing.log', 'weekly', 30)
-LOG4=Logger.new('logs/strategy_bigcandle_nifty.log', 'weekly', 30)
+LOG1=Logger.new('logs/bigcandle_banknifty.log', 'weekly', 30)
+LOG2=Logger.new('logs/bigcandle_nifty.log', 'weekly', 30)
+LOG3=Logger.new('logs/bigcandle_closing_banknifty.log', 'weekly', 30)
+LOG4=Logger.new('logs/bigcandle_closing_nifty.log', 'weekly', 30)
 
 APP.formatter = proc do |severity, datetime, progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
@@ -73,14 +73,14 @@ APP.info intro_msg
 telegram_bot.send_message intro_msg
 
 feeder1 = Feeder.new(kite_ticker,DATA,260105)
-feeder2 = Feeder.new(kite_ticker,DATA,260105)
+feeder2 = Feeder.new(kite_ticker,DATA,256265)
 feeder3 = Feeder.new(kite_ticker,DATA,260105)
 feeder4 = Feeder.new(kite_ticker,DATA,256265)
 
-StrategyHighLow.new(traders, feeder1, LOG1)
+StrategyBigCandle.new(traders, feeder1, LOG1)
 StrategyBigCandle.new(traders, feeder2, LOG2)
 StrategyBigCandleClosing.new(traders, feeder3, LOG3)
-StrategyBigCandle.new(traders, feeder4, LOG4)
+StrategyBigCandleClosing.new(traders, feeder4, LOG4)
 
 highlow_pid = fork do
   puts "Running HighLow strategy"

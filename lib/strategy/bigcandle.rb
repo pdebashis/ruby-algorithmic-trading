@@ -198,14 +198,15 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:target_per_trade]
-    @trade_exit = config[:index][:exit_per_trade]
+    @trade_target = config[@index][:target_per_trade]
+    @trade_exit = config[@index][:exit_per_trade]
    
     if @trade_flag 
       @users.each do |usr|
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
       end
     end
 
@@ -227,14 +228,15 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:target_per_trade]
-    @trade_exit = config[:index][:exit_per_trade]   
+    @trade_target = config[@index][:target_per_trade]
+    @trade_exit = config[@index][:exit_per_trade]   
  
     if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty? 
+        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
       end
     end
 
@@ -256,14 +258,15 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:orb_target]
-    @trade_exit = config[:index][:orb_exit]
+    @trade_target = config[@index][:orb_target]
+    @trade_exit = config[@index][:orb_exit]
 
     if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
       end
     end
 
@@ -285,14 +288,15 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config[:index][:orb_target]
-    @trade_exit = config[:index][:orb_exit]
+    @trade_target = config[@index][:orb_target]
+    @trade_exit = config[@index][:orb_exit]
 
     if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
       end
     end
 
@@ -315,6 +319,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        telegram "<sell-time>,usr[:client_id],@quantity * lot_size,@strike,SELL,<ltp>"
       end
     end
 
