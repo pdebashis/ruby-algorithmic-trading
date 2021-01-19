@@ -25,14 +25,20 @@ CLIENTS.each do |record|
   browser.input(id: "password").send_keys password
 
   browser.button(:visible_text => "Login").click
-  
-  browser.input(id: "pin").send_keys otp 
-  
+ 
+  begin
+    browser.input(id: "pin").send_keys otp
+  rescue 
+    record[:access_token] = nil
+    record[:request_token] = "PASSWORD-ERROR"
+    next
+  end  
+
   begin
     browser.button(:visible_text => "Continue").click
   rescue
   end
-
+  
   sleep 1
   puts browser.url
   request_token=browser.url.split("request_token=")[1].split("&")[0]

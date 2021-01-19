@@ -28,6 +28,7 @@ class StrategyBigCandleClosing
     @net_day=0
   
     @index = @feeder.instrument.to_s 
+    @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
     @strike = ""
     @trade_target = 9999
@@ -105,7 +106,15 @@ class StrategyBigCandleClosing
 
   def telegram msg
     @logger.info msg
-    #@telegram_bot.send_message "[bigcandle] #{msg}"
+    #@telegram_bot.send_message "[#{@whichnifty}] #{msg}"
+  end
+
+  def reporting msg
+    @logger.info msg
+    date_format = Time.now.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
+    File.open(@report_name,"a+") do |op|
+      op.write("#{date_format},#{msg}\n")
+    end
   end
 
   def is_big_candle?(o,h,l,c)
@@ -169,6 +178,7 @@ class StrategyBigCandleClosing
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -198,6 +208,7 @@ class StrategyBigCandleClosing
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty? 
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -220,6 +231,7 @@ class StrategyBigCandleClosing
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
       end
     end
 

@@ -12,4 +12,9 @@ class Bar
   def add_bar_data symbol, data
     @bar_data[symbol] = data
   end
+
+  def get_symbol_ohlc
+    return @bar_data
+  end
+
 end

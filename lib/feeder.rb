@@ -111,7 +111,16 @@ class Feeder
 
   def close_ws
     @logger.info "signal:close received"
-    @logger.info @bars
+    report_path=Dir.pwd+"/reports"
+    report_date=Time.now.getlocal("+05:30").strftime "%Y_%m_%d"
+    report_name=report_path + "/" + report_date + "_" + "#{@instrument}.dat"
+    unless File.file? report_name 
+      o_fp = File.new( report_name,"w+")
+      @bars.each do |key,value|
+        o_fp.write("#{value.get_symbol_ohlc}\n")
+      end
+      o_fp.close
+    end 
     @ticker.ws.close
   end
 end

@@ -2,7 +2,6 @@ require_relative 'lib/kite/kite_connect'
 require_relative 'lib/kite/kite_ticker'
 require_relative 'lib/feeder'
 require_relative 'lib/bar'
-require_relative 'lib/strategy/highlow'
 require_relative 'lib/strategy/bigcandle'
 require_relative 'lib/strategy/bigcandleclosing'
 require_relative 'lib/telegram/bot'
@@ -82,36 +81,36 @@ StrategyBigCandle.new(traders, feeder2, LOG2)
 StrategyBigCandleClosing.new(traders, feeder3, LOG3)
 StrategyBigCandleClosing.new(traders, feeder4, LOG4)
 
-highlow_pid = fork do
-  puts "Running HighLow strategy"
+pid1 = fork do
+  puts "Running Bigcandle strategy"
   feeder1.start  
   exit
 end
 
-puts "The PID of the highlow process is #{highlow_pid}"
+puts "The PID of the process is #{pid1}"
 
-bigcandle_pid = fork do
-  puts "Running BigCandle strategy for banknifty"
+pid2 = fork do
+  puts "Running BigCandle strategy"
   feeder2.start
   exit
 end
 
-puts "The PID of the bigcandle process is #{bigcandle_pid}"
+puts "The PID of the process is #{pid2}"
 
-bigcandle_closing_pid = fork do
+pid3 = fork do
   puts "Running BigCandle Closing strategy"
   feeder3.start
   exit
 end
 
-puts "The PID of the bigcandle process is #{bigcandle_closing_pid}"
+puts "The PID of the process is #{pid3}"
 
-bigcandle2_pid = fork do
-  puts "Running BigCandle strategy for nifty50"
+pid4 = fork do
+  puts "Running BigCandle Closing strategy"
   feeder4.start
   exit
 end
 
-puts "The PID of the bigcandle2 is #{bigcandle2_pid}"
+puts "The PID of the process is #{pid4}"
 
 Process.waitall

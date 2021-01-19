@@ -28,6 +28,7 @@ class StrategyBigCandle
     @net_day=0
   
     @index = @feeder.instrument.to_s 
+    @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
     @strike = ""
     @trade_target = 9999
@@ -39,6 +40,10 @@ class StrategyBigCandle
     @hl_height = config[@index][:big_candle_size].to_i
     @oc_height = @hl_height/2 
     @day_target = config[@index][:target_per_day]
+  
+    report_path=Dir.pwd+"/reports"
+    report_date=Time.now.getlocal("+05:30").strftime "%Y_%m_%d"
+    @report_name=report_path + "/trades_" + report_date + ".dat"
   end
 
   def on_bar bar
@@ -141,7 +146,16 @@ class StrategyBigCandle
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message "[#{@index}] #{msg}"
+    @telegram_bot.send_message "[#{@whichnifty}] #{msg}"
+  end
+
+
+  def reporting msg
+    @logger.info msg
+    date_format = Time.now.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
+    File.open(@report_name,"a+") do |op|
+      op << "#{date_format},#{msg}\n"
+    end
   end
 
   def check_orb(high,low,time)
@@ -206,7 +220,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -236,7 +250,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -266,7 +280,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -296,7 +310,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        telegram "<buy-time>,usr[:client_id],@quantity * lot_size,@strike,BUY,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
     end
 
@@ -319,7 +333,7 @@ class StrategyBigCandle
         kite_usr=usr[:kite_api]
         lot_size=usr[:lot_size]
         kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        telegram "<sell-time>,usr[:client_id],@quantity * lot_size,@strike,SELL,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
       end
     end
 
