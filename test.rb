@@ -67,11 +67,10 @@ kite_ticker = KiteTicker.new(ticker_user.access_token,ticker_user.api_key,APP)
 telegram_bot=TelegramBot.new
 intro_msg="GLHF\n"
 traders.each do |trader|
-  intro_msg += "ID:#{trader[:client_id]}:Lotsize BNF:#{trader[:lot_size_banknifty]} NF:#{trader[:lot_size_nifty]}\n" 
+  intro_msg += "ID:#{trader[:client_id]}:Lotsize:#{trader[:lot_size]}\n" 
 end
 
-APP.info intro_msg
-telegram_bot.send_message intro_msg
+puts intro_msg
 
 feeder1 = Feeder.new(kite_ticker,DATA,260105)
 feeder2 = Feeder.new(kite_ticker,DATA,256265)

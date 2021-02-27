@@ -35,6 +35,9 @@ class StrategyBigCandleClosing
     @trade_exit = -9999
     @day_target = 9999
     @trade_flag=false
+
+    report_path=Dir.pwd+"/reports"
+    @report_name=report_path + "/trades" + ".dat"
   end
 
   def on_bar bar
@@ -173,13 +176,13 @@ class StrategyBigCandleClosing
     @trade_target = config[@index][:target_per_trade]
     @trade_exit = config[@index][:exit_per_trade] 
    
-    if @trade_flag 
-      @users.each do |usr|
-        kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
+    @users.each do |usr|
+      kite_usr=usr[:kite_api]
+      lot_size=usr[:lot_size]
+      if @trade_flag
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
     end
 
     ltp = @user.ltp(@instrument)
@@ -203,13 +206,13 @@ class StrategyBigCandleClosing
     @trade_target = config[@index][:target_per_trade]
     @trade_exit = config[@index][:exit_per_trade]
     
-    if @trade_flag
-      @users.each do |usr|
-        kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
+    @users.each do |usr|
+      kite_usr=usr[:kite_api]
+      lot_size=usr[:lot_size]
+      if @trade_flag
         kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty? 
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
       end
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
     end
 
     ltp = @user.ltp(@instrument)
@@ -226,13 +229,13 @@ class StrategyBigCandleClosing
   end
 
   def sell_position
-    if @trade_flag
-      @users.each do |usr|
-        kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
+    @users.each do |usr|
+      kite_usr=usr[:kite_api]
+      lot_size=usr[:lot_size]
+      if @trade_flag
         kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
       end
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
     end
 
     @decision_map[:wait_sell]=false

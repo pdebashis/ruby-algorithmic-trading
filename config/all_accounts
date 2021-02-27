@@ -1,0 +1,12 @@
+- Abhishek_ID: 
+  :api_key: gzqe6mkao9jmzehh
+  :api_secret: ixi411od9mhw899uhcc67t3ayw9wp8jl
+  :client: UP9405
+  :login_url: https://kite.zerodha.com/connect/login?api_key=gzqe6mkao9jmzehh
+  :otp: 123456
+  :password: asd@1234
+  :request_token: DSujkxHW0O603dHv9WOneiiCl9jW0iR2
+  :access_token: 
+  :login_time: '2021-02-02 09:00:11'
+  :lot_size_banknifty: 2
+  :lot_size_nifty: 1

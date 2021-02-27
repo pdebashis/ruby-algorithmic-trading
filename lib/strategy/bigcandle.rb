@@ -31,8 +31,9 @@ class StrategyBigCandle
     @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
     @strike = ""
-    @trade_target = 9999
-    @trade_exit = -9999
+    config=OpenStruct.new YAML.load_file 'config/config.yaml'
+    @trade_target = config[@index][:orb_target]
+    @trade_exit = config[@index][:orb_exit]
     @day_target = 9999
     @trade_flag=true
     
@@ -42,8 +43,7 @@ class StrategyBigCandle
     @day_target = config[@index][:target_per_day]
   
     report_path=Dir.pwd+"/reports"
-    report_date=Time.now.getlocal("+05:30").strftime "%Y_%m_%d"
-    @report_name=report_path + "/trades_" + report_date + ".dat"
+    @report_name=report_path + "/trades" + ".dat"
   end
 
   def on_bar bar
@@ -96,14 +96,14 @@ class StrategyBigCandle
         @orb_decision_map[:target]=@orb_decision_map[:trigger]+300
         @orb_decision_map[:buy]=true
         @orb_decision_map[:stoploss]=@orb_decision_map[:trigger]-80
-        orb_buy_ce
+        buy_ce
       end
       if tick < @orb_decision_map[:low]
         @orb_decision_map[:trigger]=@orb_decision_map[:low]
         @orb_decision_map[:target]=@orb_decision_map[:trigger]-300
         @orb_decision_map[:buy]=false
         @orb_decision_map[:stoploss]=@orb_decision_map[:trigger]+80
-        orb_buy_pe
+        buy_pe
       end
     end
 
@@ -130,6 +130,8 @@ class StrategyBigCandle
 
   def reset_counters
     @decision_map[:big_candle]=false
+	@orb_decision_map[:wait_buy]= false
+    @orb_decision_map[:wait_sell]=false
     @decision_map[:wait_buy]= false
     @decision_map[:wait_sell]=false
     @decision_map[:green] = nil 
@@ -198,6 +200,9 @@ class StrategyBigCandle
   def check_inside_candle(o,h,l,c)
     if h < @decision_map[:big_candle_high] and l > @decision_map[:big_candle_low]
       telegram "INSIDE CANDLE FORMED"
+      config=OpenStruct.new YAML.load_file 'config/config.yaml'
+      @trade_target = config[@index][:target_per_trade]
+      @trade_exit = config[@index][:exit_per_trade]
       @decision_map[:wait_buy]=true
     else
       @logger.info "BREAKOUT OF RANGE"
@@ -212,29 +217,39 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_ce].to_s
     @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:target_per_trade]
-    @trade_exit = config[@index][:exit_per_trade]
+   
+    ltp = @user.ltp(@instrument)
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
    
     if @trade_flag 
       @users.each do |usr|
         kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
+        lot_size_sym="lot_size_" + @whichnifty
+	lot_size=usr[lot_size_sym.to_sym] * @quantity
+        kite_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,#{ltp_value}"
       end
     end
 
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
+
     @decision_map[:ltp_at_buy]=ltp_value
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
     telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value} ; TARGET: #{target_value} ; SL: #{sl_value}"
-    @decision_map[:wait_buy]=false
-    @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@decision_map}"
+	if @decision_map[:wait_buy]
+	  @decision_map[:wait_buy]=false
+	  @decision_map[:wait_sell]=true
+	  @logger.info "DECISION MAP : #{@decision_map}"
+	end
+	
+	if @orb_decision_map[:wait_buy]
+	  @orb_decision_map[:wait_buy]=false
+      @orb_decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@orb_decision_map}"
+	end
+	
   end
 
   def buy_pe
@@ -242,107 +257,58 @@ class StrategyBigCandle
     @instrument = config[@index][:instrument_pe].to_s
     @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:target_per_trade]
-    @trade_exit = config[@index][:exit_per_trade]   
+ 
+    ltp = @user.ltp(@instrument)
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
  
     if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
+        lot_size_sym="lot_size_" + @whichnifty
+	lot_size=usr[lot_size_sym.to_sym] * @quantity
+        kite_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,#{ltp_value}"
       end
     end
 
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
-    @decision_map[:ltp_at_buy]=ltp_value
-    target_value = ltp_value + @trade_target
-    sl_value = ltp_value + @trade_exit
-
-    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value} ; SL: #{sl_value}"
-    @decision_map[:wait_buy]=false
-    @decision_map[:wait_sell]=true
-    @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@decision_map}"
-  end
-
-  def orb_buy_ce
-    config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @instrument = config[@index][:instrument_ce].to_s
-    @strike = config[@index][:strike_ce]
-    @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:orb_target]
-    @trade_exit = config[@index][:orb_exit]
-
-    if @trade_flag
-      @users.each do |usr|
-        kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
-      end
-    end
-
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
-    @decision_map[:ltp_at_buy]=ltp_value || 0
-    target_value = ltp_value + @trade_target
-    sl_value = ltp_value + @trade_exit
-
-    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value} ; TARGET: #{target_value} ; SL: #{sl_value}"
-    @orb_decision_map[:wait_buy]=false
-    @orb_decision_map[:wait_sell]=true
-    @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@orb_decision_map}"
-  end
-
-  def orb_buy_pe
-    config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @instrument = config[@index][:instrument_pe].to_s
-    @strike = config[@index][:strike_pe]
-    @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:orb_target]
-    @trade_exit = config[@index][:orb_exit]
-
-    if @trade_flag
-      @users.each do |usr|
-        kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
-      end
-    end
-
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
     @decision_map[:ltp_at_buy]=ltp_value || 0
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
 
     telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value} ; SL: #{sl_value}"
-    @orb_decision_map[:wait_buy]=false
-    @orb_decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@orb_decision_map}"
+	if @decision_map[:wait_buy]
+	  @decision_map[:wait_buy]=false
+	  @decision_map[:wait_sell]=true
+	  @logger.info "DECISION MAP : #{@decision_map}"
+	end
+	
+	if @orb_decision_map[:wait_buy]
+	  @orb_decision_map[:wait_buy]=false
+      @orb_decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@orb_decision_map}"
+	end
   end
 
   def sell_position
-    if @trade_flag
+  
+    @feeder.unsubscribe(@instrument)
+    ltp = @user.ltp(@instrument)
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
+    
+	if @trade_flag
       @users.each do |usr|
         kite_usr=usr[:kite_api]
-        lot_size=usr[:lot_size]
+        lot_size_sym="lot_size_" + @whichnifty
+	lot_size=usr[lot_size_sym.to_sym]
         kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,#{ltp_value}"
       end
     end
 
     @decision_map[:wait_sell]=false if @decision_map[:wait_sell]
     @orb_decision_map[:wait_sell]=false if @orb_decision_map[:wait_sell]
 
-    @feeder.unsubscribe(@instrument)
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
 
