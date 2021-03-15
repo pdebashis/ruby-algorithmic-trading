@@ -83,7 +83,7 @@ class Feeder
 
   def persist_bar
     @logger.debug "Number of ticks captured in last time frame:#{@ticks.values.first.size}"
-    #return if @ticks.values.first.size < 600
+    return if @ticks.values.first.size < 600
     @ticks.each do |k,v|
       d = {
         time: k,
