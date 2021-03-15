@@ -1,0 +1,49 @@
+---
+- Prabin_ID: 
+  :api_key: sdrivw1tlz2geg9s
+  :api_secret: 6a1v44bp9pal46ag505kac9np0ukrke8
+  :client: DN2156
+  :login_url: https://kite.zerodha.com/connect/login?api_key=sdrivw1tlz2geg9s
+  :otp: 123456
+  :password: asd@1234
+  :request_token: iibOyXwbDe9MjQj1AtnYwejiht1E5ym5
+  :access_token: 8V5ZsoJ5qcD62M1jExjPHb1O6ylBM4q5
+  :login_time: '2021-02-22 07:38:27'
+  :lot_size_banknifty: 15
+  :lot_size_nifty: 5
+- Prithvi_ID: 
+  :api_key: ydh2c2re2925vaiw
+  :api_secret: 9x8yvydozruj8tcwsisxju84709lkxr2
+  :client: YD7348
+  :login_url: https://kite.zerodha.com/connect/login?api_key=ydh2c2re2925vaiw
+  :otp: 123456
+  :password: asd@1234
+  :request_token: 7MbAl1vdk7L8j3NIJH30aokPj5EG2qUR
+  :access_token: yGpJalx3sYKhkxDz28f6oHlgym5XwOKw
+  :login_time: '2021-02-22 09:00:12'
+  :lot_size_banknifty: 15
+  :lot_size_nifty: 5
+- Bhavana_ID: 
+  :api_key: x6p1t6mymq7cb1mw
+  :api_secret: gmxnl33md1x4h8qdic2vrdx7w3tyhlxn
+  :client: IP6577
+  :login_url: https://kite.zerodha.com/connect/login?api_key=x6p1t6mymq7cb1mw
+  :otp: 123456
+  :password: asd@1234
+  :request_token: uAzZVKX8hbuSguX5QTVtHFeMtcakOjH8
+  :access_token: VxdfNxsYDEAIQSuNtYXbNDtFX5cp81fJ
+  :login_time: '2021-02-22 09:00:14'
+  :lot_size_banknifty: 15
+  :lot_size_nifty: 5
+- Satish_ID: 
+  :api_key: olty8prtppkrp3zc
+  :api_secret: 0ala107uywt36xzfasi50c1z2uiuwwh1
+  :client: YV6876
+  :login_url: https://kite.zerodha.com/connect/login?api_key=olty8prtppkrp3zc
+  :otp: 123456
+  :password: asd@1234
+  :request_token: uAzZVKX8hbuSguX5QTVtHFeMtcakOjH8
+  :access_token: VxdfNxsYDEAIQSuNtYXbNDtFX5cp81fJ
+  :login_time: '2021-02-22 09:00:14'
+  :lot_size_banknifty: 15
+  :lot_size_nifty: 5
