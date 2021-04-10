@@ -78,7 +78,7 @@ class StrategyBigCandleClosing
         sell_position if tick < @decision_map[:stop_loss] 
         sell_position if tick > @decision_map[:target_price]
       else
-        sell_positon if tick > @decision_map[:stop_loss]
+        sell_position if tick > @decision_map[:stop_loss]
         sell_position if tick < @decision_map[:target_price]
       end
     end

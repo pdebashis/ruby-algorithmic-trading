@@ -58,6 +58,8 @@ class StrategyBigCandle
       if time.eql? "14:45"
         close_day(closing)
       elsif time.eql? "15:0"
+        close_day(closing)
+        reset_counters 
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         check_orb(high,low,time)
@@ -85,7 +87,7 @@ class StrategyBigCandle
         sell_position if tick < @decision_map[:stop_loss] 
         sell_position if tick > @decision_map[:target_price]
       else
-        sell_positon if tick > @decision_map[:stop_loss]
+        sell_position if tick > @decision_map[:stop_loss]
         sell_position if tick < @decision_map[:target_price]
       end
     end

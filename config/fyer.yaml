@@ -1,0 +1,13 @@
+---
+- Sagar_ID: 
+  :api_key: N1KKAC4OAM-100
+  :api_secret: EXT60386IX
+  :client: FS3859
+  :login_url: https://api.fyers.in/api/v2/generate-authcode?client_id=N1KKAC4OAM-100&redirect_uri=127.0.0.1:9000/sagar
+  :otp: 07-08-1993
+  :password: S@gar123ii
+  :request_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkubG9naW4uZnllcnMuaW4iLCJpYXQiOjE2MTc5MzkwMzAsImV4cCI6MTYxNzkzOTMzMCwibmJmIjoxNjE3OTM5MDMwLCJhdWQiOiJbXCJ4OjJcIiwgXCJ4OjFcIiwgXCJ4OjBcIl0iLCJzdWIiOiJhdXRoX2NvZGUiLCJkaXNwbGF5X25hbWUiOiJGUzM4NTkiLCJub25jZSI6IiIsImFwcF9pZCI6Ik4xS0tBQzRPQU0iLCJ1dWlkIjoiNGMyYjMzZWY4NmQ3NGIwZWE2MDkwMzZmYzUzMjU2M2UiLCJpcEFkZHIiOiI1Mi4yMjEuMTg3LjciLCJzY29wZSI6IiJ9.6BnGwAqNpE1ElWNYTEsHX3AhrrNeJMoi5kOJyFVTlZc
+  :access_token: 
+  :login_time: '2021-03-23 09:00:11'
+  :lot_size_banknifty: 3
+  :lot_size_nifty: 1
