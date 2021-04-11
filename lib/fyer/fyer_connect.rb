@@ -94,7 +94,7 @@ class FyerConnect
 
   # Generate access_token by exchanging request_token
   def generate_access_token(request_token, api_secret)
-    checksum = Digest::SHA256.hexdigest api_key.encode('utf-8') + request_token.encode('utf-8') + api_secret.encode('utf-8')
+    checksum = Digest::SHA256.hexdigest api_key.encode('utf-8') + ":" + api_secret.encode('utf-8')
 
     resp = post("api.token", {
       "api_key" => api_key,
