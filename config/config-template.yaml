@@ -11,19 +11,29 @@ table:
   :bigcandle_exit_per_trade: 
   :bigcandle_target_per_day: 
   :260105:
-    :big_candle_size: 
-    :strike_ce: 
-    :instrument_ce: 
-    :strike_pe: 
-    :instrument_pe: 
-    :quantity:
+:quantity: 9
+    :big_candle_size: 60
+    :target_per_trade: 60
+    :exit_per_trade: -30
+    :target_per_day: 150
+    :orb_target: 70
+    :orb_exit: -40
+    :strike_ce: BANKNIFTY21APR32600CE
+    :instrument_ce: 16754690                                             
+    :strike_pe: BANKNIFTY21APR31000PE
+    :instrument_pe: 16715266
   :256265:
-    :big_candle_size: 
-    :strike_ce: 
-    :instrument_ce: 
-    :strike_pe: 
-    :instrument_pe: 
-    :quantity: 
+    :quantity: 9
+    :big_candle_size: 20
+    :target_per_trade: 30
+    :exit_per_trade: -15
+    :target_per_day: 100
+    :orb_target: 40
+    :orb_exit: -30
+    :strike_ce: NIFTY21APR14700CE 
+    :instrument_ce: 17060610
+    :strike_pe: NIFTY21APR13950PE
+    :instrument_pe: 17037058
 
 ====>levels.yaml
 ---
@@ -52,7 +62,22 @@ all_levels:
   :request_token: 
   :access_token: 
   :login_time: 
-- client2: 
+- JohnSmith_ID: 
+  :api_key: oltyasdadddpkrp3zc
+  :api_secret: 0ala1adaddadddadz2uiuwwh1
+  :client: AA1234
+  :login_url: https://kite.zerodha.com/connect/login?api_key=oltyasdadddpkrp3zc
+  :otp: 123456
+  :password: asd@1234
+  :request_token: 
+  :access_token: 
+  :login_time: 
+  :lot_size_banknifty: 3
+  :lot_size_nifty: 1
+
+====>fyer.yaml
+---
+- client1: 
   :api_key: 
   :api_secret: 
   :client: 
@@ -62,3 +87,17 @@ all_levels:
   :request_token: 
   :access_token: 
   :login_time: 
+  :lot_size_banknifty: 
+  :lot_size_nifty: 
+- JohnSmith_ID: 
+  :api_key: N1KKAC4OAM-100
+  :api_secret: EXT60386IX
+  :client: FS3859
+  :login_url: https://api.fyers.in/api/v2/generate-authcode?client_id=N1KKAC4OAM-100&redirect_uri=127.0.0.1:9000/sagar
+  :otp: 07-08-1993
+  :password: S@gar123ii
+  :request_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkubG9naW4uZnllcnMuaW4iLCJpYXQiOjE2MTkxNDg2MzEsImV4cCI6MTYxOTE0ODkzMSwibmJmIjoxNjE5MTQ4NjMxLCJhdWQiOiJbXCJ4OjJcIiwgXCJ4OjFcIiwgXCJ4OjBcIl0iLCJzdWIiOiJhdXRoX2NvZGUiLCJkaXNwbGF5X25hbWUiOiJGUzM4NTkiLCJub25jZSI6IiIsImFwcF9pZCI6Ik4xS0tBQzRPQU0iLCJ1dWlkIjoiNGI4ZjdmNjBkMGIwNDQwYzhhNjFmYThkNmUzYmU3ZTciLCJpcEFkZHIiOiI1Mi4yMjEuMTg3LjciLCJzY29wZSI6IiJ9.OwU5flw_mRSrPmLXxQyOqraXogDv454CQPoUmBQDivM
+  :access_token: 
+  :login_time: '2021-03-23 09:00:11'
+  :lot_size_banknifty: 3
+  :lot_size_nifty: 1

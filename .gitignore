@@ -3,6 +3,7 @@
 /config/config.yaml
 /config/levels.yaml
 /config/login.yaml
+/config/fyer.yaml
 /coverage/
 /InstalledFiles
 /pkg/
