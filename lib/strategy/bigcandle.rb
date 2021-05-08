@@ -229,7 +229,7 @@ class StrategyBigCandle
         lot_size_sym="lot_size_" + @whichnifty
 	lot_size=usr[lot_size_sym.to_sym] * @quantity
         kite_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,#{ltp_value}"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
       end
     end
 
@@ -269,7 +269,7 @@ class StrategyBigCandle
         lot_size_sym="lot_size_" + @whichnifty
 	lot_size=usr[lot_size_sym.to_sym] * @quantity
         kite_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,#{ltp_value}"
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
       end
     end
 
@@ -302,9 +302,9 @@ class StrategyBigCandle
       @users.each do |usr|
         kite_usr=usr[:kite_api]
         lot_size_sym="lot_size_" + @whichnifty
-	lot_size=usr[lot_size_sym.to_sym]
-        kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,#{ltp_value}"
+	lot_size=usr[lot_size_sym.to_sym]*@quantity
+        kite_usr.place_cnc_order(@strike, "SELL", lot_size, nil, "MARKET") unless @strike.empty?
+        reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},SELL,#{ltp_value}"
       end
     end
 

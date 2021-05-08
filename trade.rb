@@ -1,4 +1,5 @@
 require_relative 'lib/kite/kite_connect'
+require_relative 'lib/fyer/fyer_connect'
 require_relative 'lib/kite/kite_ticker'
 require_relative 'lib/feeder'
 require_relative 'lib/bar'
@@ -37,6 +38,7 @@ LOG3.formatter = log_formatter
 LOG4.formatter = log_formatter
 
 traders=[]
+traders_fyer=[]
 
 CLIENTS=YAML.load_file 'config/login.yaml'
 CLIENTS.each do |client|
@@ -56,8 +58,10 @@ CLIENTS.each do |client|
     APP.info "Updating ACCESS TOKEN in Database"
     client[:access_token] = kite_connect.access_token
     client[:login_time] = login_details["login_time"]
+    funds=kite_connect.margins["equity"]["available"]["live_balance"]
+    
   end
-  traders<< {kite_api: kite_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time]}
+  traders<< {kite_api: kite_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time], funds: funds}
 end
 File.open('config/login.yaml', 'w') {|f| f.write CLIENTS.to_yaml }
 
@@ -66,8 +70,36 @@ kite_ticker = KiteTicker.new(ticker_user.access_token,ticker_user.api_key,APP)
 
 telegram_bot=TelegramBot.new
 intro_msg="GLHF\n"
+intro_msg +="---KITE Users\n"
 traders.each do |trader|
-  intro_msg += "ID:#{trader[:client_id]}:Lotsize BNF:#{trader[:lot_size_banknifty]} NF:#{trader[:lot_size_nifty]}\n" 
+  intro_msg += "ID:#{trader[:client_id]}:Lotsize BNF:#{trader[:lot_size_banknifty]} NF:#{trader[:lot_size_nifty]} FUNDS:#{trader[:funds]}\n" 
+end
+
+CLIENTS_FYER=YAML.load_file 'config/fyer.yaml'
+CLIENTS_FYER.each do |client|
+  fyer_connect = FyerConnect.new(client[:api_key],APP)
+  unless client[:access_token].nil?
+    fyer_connect.set_access_token(client[:access_token])
+    APP.info "Using ACCESS TOKEN From Database"
+  else
+    begin
+      login_details=fyer_connect.generate_access_token(client[:request_token], client[:api_secret])
+    rescue
+      puts "login failed = #{login_details}"
+      APP.info "login failed = #{login_details}"
+      next
+    end
+    APP.info "Updating ACCESS TOKEN in Database"
+    client[:access_token] = fyer_connect.access_token
+    client[:login_time] = Time.now.getlocal("+05:30")
+    funds=fyer_connect.margins["fund_limit"].select{ |x| x["id"] == 10 }[0]["equityAmount"]
+  end
+  traders_fyer << {kite_api: fyer_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time], funds: funds}
+end
+File.open('config/fyer.yaml', 'w') {|f| f.write CLIENTS_FYER.to_yaml }
+intro_msg +="---FYER Users\n"
+traders_fyer.each do |trader|
+  intro_msg += "ID:#{trader[:client_id]}:Lotsize BNF:#{trader[:lot_size_banknifty]} NF:#{trader[:lot_size_nifty]} FUNDS:#{trader[:funds]}\n"
 end
 
 APP.info intro_msg

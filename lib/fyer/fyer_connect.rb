@@ -11,18 +11,19 @@ class FyerConnect
   # Base URL
   # Can be overridden during initialization
   BASE_URL = "https://api.fyers.in"
-  LOGIN_URL = "https://api.fyers.in/connect/login" # Default Login URL
-  TIMEOUT = 7 # In seconds
+  LOGIN_URL = "https://api.fyers.in/api/v2/generate-authcode?" # Default Login URL
+  REDIRECT_URL = "127.0.0.1:9000/sagar"
+  TIMEOUT = 10 # In seconds
   API_VERSION = 3 # Use Kite API Version 3
 
   # URIs for API calls
   # Not all API calls are currently implemented
   ROUTES = {
-    "api.token" => "/session/token",
+    "api.token" => "/api/v2/validate-authcode",
     "api.token.invalidate" => "/session/token",
     "api.token.renew" => "/session/refresh_token",
-    "user.profile" => "/user/profile",
-    "user.margins" => "/user/margins",
+    "user.profile" => "/api/v2/profile",
+    "user.margins" => "/api/v2/funds",
     "user.margins.segment" => "/user/margins/%{segment}",
 
     "orders" => "/orders",
@@ -64,7 +65,7 @@ class FyerConnect
     "market.quote.ltp" => "/quote/ltp",
   }
 
-  attr_accessor :api_key, :access_token, :base_url, :timeout, :logger
+  attr_accessor :api_key, :api_secret, :access_token, :redirect_url, :base_url,:timeout, :logger
 
   # Initialize a new KiteConnect instance
   # - api_key is application's API key
@@ -73,9 +74,9 @@ class FyerConnect
   # - base_url is the API endpoint root. If it's not specified, then
   # default BASE_URL will be used as root.
   # - logger is an instance of Rails Logger or any other logger used
-  def initialize(api_key, logger = nil, access_token = nil, base_url = nil )
+  def initialize(api_key, logger = nil, base_url = nil, access_token = nil )
     self.api_key = api_key
-    self.access_token = access_token
+    self.access_token = 
     self.base_url = base_url || BASE_URL
     self.timeout = TIMEOUT
     self.logger = logger
@@ -84,7 +85,7 @@ class FyerConnect
   # Remote login url to which a user needs to be redirected in order to
   # initiate login flow.
   def login_url
-    return LOGIN_URL + "?v=#{API_VERSION}&api_key=#{api_key}"
+    return LOGIN_URL + "?client_id=#{api_key}&redirect_uri=#{redirect_url}"
   end
 
   # Setter method to set access_token
@@ -97,9 +98,9 @@ class FyerConnect
     checksum = Digest::SHA256.hexdigest api_key.encode('utf-8') + ":" + api_secret.encode('utf-8')
 
     resp = post("api.token", {
-      "api_key" => api_key,
-      "request_token" => request_token,
-      "checksum" => checksum
+      "grant_type" => "authorization_code",
+      "appIdHash" => checksum,
+      "code" => request_token
     })
 
     # Set access token if it's present in response
@@ -320,16 +321,17 @@ class FyerConnect
     url = URI.join(base_url, uri)
 
     logger.debug "URI: #{uri}" if logger
+    logger.debug "PARAMS: #{params.to_json}" if logger
 
     headers = {
-      "X-Kite-Version" => "#{API_VERSION}",  # For version 3
-      "User-Agent" => "Quantomatic v1"
+      "User-Agent" => "Quantomatic v1",
+      "Content-Type" => "application/json"
     }
 
     # Set auth_header if access_token is present
     if api_key && access_token
       auth_header = "#{api_key}:#{access_token}"
-      headers["Authorization"] = "token #{auth_header}"
+      headers["Authorization"] = "#{auth_header}"
     end
 
     # RestClient requires query params to be set in headers :-/
@@ -343,7 +345,7 @@ class FyerConnect
         method: method.to_sym,
         timeout: timeout,
         headers: headers,
-        payload: ["post", "put"].include?(method) ? params : nil
+        payload: ["post", "put"].include?(method) ? params.to_json : nil
       )
 
     rescue RestClient::ExceptionWithResponse => err
@@ -366,13 +368,14 @@ class FyerConnect
     end
 
     case response.headers[:content_type]
-    when "application/json"
-      data = JSON.parse(response.body)["data"]
+    when "application/json; charset=utf-8"
+      data = JSON.parse(response.body)
     when "text/csv"
       data = CSV.parse(response.body, headers: true)
     end
-
+    
     return data
   end
 
 end
+
