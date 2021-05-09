@@ -2,24 +2,24 @@
 A simple ruby algorithmic trading framework capable of automated buying or selling using predefined set of rules
 Supports Kite/Fyer API
 
-#Features
-Buy and Sell using existing strategies
-Formulate trading strategy using the framework
-Back-testing and Live-testing
-Measure and optimize with the help of reports
+###### Features
+- Buy and Sell using existing strategies
+- Formulate trading strategy using the framework
+- Back-testing and Live-testing
+- Measure and optimize with the help of reports
 
-#Setup
-rvm install 2.5.5
-git clone <git-url>
-Create config.yaml,	Kite.yaml, Fyer.yaml
-Added geckodriver-v0.27.0-linux32.tar.gz to $PATH
-Yum install firefox
-gem install watir
-gem install telegram-bot-ruby
-gem install selenium-webdriver
-gem install frappuccino
+###### Setup
+- rvm install 2.5.5
+- git clone <git-url>
+- Create config.yaml,	Kite.yaml, Fyer.yaml
+- Add geckodriver to $PATH
+- yum install firefox
+- gem install watir
+- gem install telegram-bot-ruby
+- gem install selenium-webdriver
+- gem install frappuccino
 
-#AWS Deployment
+###### AWS Deployment
 1. Setup a VPC(65000 IPs) and have a subnet (251 IPs). VPC requires a region and IP range
 2. Setup a sbnet in suitable availability zone.
 3. Enable public IPv4 address on subnet
