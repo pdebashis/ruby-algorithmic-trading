@@ -1,5 +1,5 @@
 
-require_relative 'lib/fyer/fyer_connect'
+load './lib/fyer/fyer_connect.rb'
 require_relative 'lib/kite/kite_ticker'
 require_relative 'lib/feeder'
 require_relative 'lib/bar'

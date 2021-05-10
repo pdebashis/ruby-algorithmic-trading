@@ -39,6 +39,7 @@ LOG4.formatter = log_formatter
 
 traders=[]
 traders_fyer=[]
+traders_all=[]
 
 CLIENTS=YAML.load_file 'config/login.yaml'
 CLIENTS.each do |client|
@@ -110,10 +111,13 @@ feeder2 = Feeder.new(kite_ticker,DATA,256265)
 feeder3 = Feeder.new(kite_ticker,DATA,260105)
 feeder4 = Feeder.new(kite_ticker,DATA,256265)
 
-StrategyBigCandle.new(traders, feeder1, LOG1)
-StrategyBigCandle.new(traders, feeder2, LOG2)
-StrategyBigCandleClosing.new(traders, feeder3, LOG3)
-StrategyBigCandleClosing.new(traders, feeder4, LOG4)
+traders_all = traders_all.concat traders
+traders_all = traders_all.concat traders_fyer
+
+StrategyBigCandle.new(traders_all, feeder1, LOG1)
+StrategyBigCandle.new(traders_all, feeder2, LOG2)
+StrategyBigCandleClosing.new(traders_all, feeder3, LOG3)
+StrategyBigCandleClosing.new(traders_all, feeder4, LOG4)
 
 pid1 = fork do
   APP.info "Running Bigcandle strategy"

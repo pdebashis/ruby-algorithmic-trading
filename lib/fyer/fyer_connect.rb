@@ -15,6 +15,8 @@ class FyerConnect
   REDIRECT_URL = "127.0.0.1:9000/sagar"
   TIMEOUT = 10 # In seconds
   API_VERSION = 3 # Use Kite API Version 3
+  BUY=1
+  SELL=-1
 
   # URIs for API calls
   # Not all API calls are currently implemented
@@ -30,7 +32,7 @@ class FyerConnect
     "trades" => "/trades",
 
     "order.info" => "/orders/%{order_id}",
-    "order.place" => "/orders/%{variety}",
+    "order.place" => "/api/v2/orders",
     "order.modify" => "/orders/%{variety}/%{order_id}",
     "order.cancel" => "/orders/%{variety}/%{order_id}",
     "order.trades" => "/orders/%{order_id}/trades",
@@ -183,32 +185,37 @@ class FyerConnect
   end
 
   # Place an order
-  # - exchange : NSE / BSE
-  # - tradingsymbol is the symbol of the instrument
-  # - transaction_type BUY / SELL
-  # - quantity
-  # - product MIS / CNC
-  # - order_type MARKET / LIMIT / SL / SL-M
-  # - price used in LIMIT orders
-  # - trigger_price is the price at which an order should be triggered in case of SL / SL-M
-  # - tag alphanumeric (max 8 chars) used to tag an order
-  # - variety regular / bo / co / amo - defaults to regular
+  # symbol       :"NSE:<instrument>",
+  # qty          :25*lotsize,
+  # type         :2         2->MARKET
+  # side         :1         1->BUY,-1->SELL
+  # productType  : CNC
+  # limitPrice   : 0
+  # stopPrice    : 0
+  # validity     : DAY
+  # disclosedQty : 0
+  # offlineOrder : False
+  # stopLoss     : 0
+  # takeProfit   : 0 
   #
   # Return order_id in case of success.
   def place_order(exchange, tradingsymbol, transaction_type, quantity, product,
                   order_type, price = nil, trigger_price = nil, tag = nil, variety = nil)
     params = {}
-    params[:variety] = variety || "regular" # regular, bo, co, amo
-    params[:exchange] = exchange || "NSE"
-    params[:tradingsymbol] = tradingsymbol
-    params[:transaction_type] = transaction_type
-    params[:quantity] = quantity.to_i
-    params[:product] = product || "CNC" # CNC, MIS
-    params[:order_type] = order_type # MARKET, LIMIT, SL, SL-M
-    params[:price] = price if price # For limit orders
-    params[:trigger_price] = trigger_price if trigger_price
-    params[:tag] = tag if tag
-
+    exchange_type = exchange || "NSE"
+    params[:symbol] = exchange_type + ":" + tradingsymbol
+    params[:side] = transaction_type
+    params[:qty] = quantity.to_i
+    params[:productType] = product || "CNC"
+    params[:type] = order_type
+    params[:limitPrice] = price || 0
+    params[:validity] = "DAY"
+    params[:offlineOrder] = "false"
+    params[:stopPrice] = price || 0
+    params[:disclosedQty] = 0
+    params[:stopLoss] = 0
+    params[:takeProfit] = 0
+    
     resp = post("order.place", params)
 
     if resp && order_id = resp["order_id"]
@@ -257,7 +264,9 @@ class FyerConnect
   # CNC => Cash N Carry
   # Wrapper around place_order to simplify placing a regular CNC order
   def place_cnc_order(tradingsymbol, transaction_type, quantity, price, order_type = "LIMIT", trigger_price = nil)
-    place_order("NFO", tradingsymbol, transaction_type, quantity, "NRML", order_type, price, trigger_price)
+    transaction_type_fyer = transaction_type == "BUY" ? 1 : -1
+    order_type_fyer = order_type == "MARKET" ? 2 : 1
+    place_order("NSE", tradingsymbol, transaction_type_fyer, quantity, "INTRADAY", order_type_fyer, price, trigger_price)
   end
 
   # Wrapper around modify_order to simplify modifying a regular CNC order

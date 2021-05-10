@@ -91,6 +91,14 @@ class StrategyBigCandleClosing
 
   private
 
+  def reporting msg
+    @logger.info msg
+    date_format = Time.now.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
+    File.open(@report_name,"a+") do |op|
+      op << "#{date_format},#{msg}\n"
+    end
+  end
+
   def reset_counters
     @decision_map[:big_candle]=false
     @decision_map[:wait_buy]= false
