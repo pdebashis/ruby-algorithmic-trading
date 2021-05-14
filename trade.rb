@@ -59,9 +59,8 @@ CLIENTS.each do |client|
     APP.info "Updating ACCESS TOKEN in Database"
     client[:access_token] = kite_connect.access_token
     client[:login_time] = login_details["login_time"]
-    funds=kite_connect.margins["equity"]["available"]["live_balance"]
-    
   end
+  funds=kite_connect.margins["equity"]["available"]["live_balance"]
   traders<< {kite_api: kite_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time], funds: funds}
 end
 File.open('config/login.yaml', 'w') {|f| f.write CLIENTS.to_yaml }
@@ -93,9 +92,10 @@ CLIENTS_FYER.each do |client|
     APP.info "Updating ACCESS TOKEN in Database"
     client[:access_token] = fyer_connect.access_token
     client[:login_time] = Time.now.getlocal("+05:30")
-    funds=fyer_connect.margins["fund_limit"].select{ |x| x["id"] == 10 }[0]["equityAmount"]
   end
-  traders_fyer << {kite_api: fyer_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time], funds: funds}
+  margins = fyer_connect.margins["fund_limit"] 
+  funds = margins ? margins.select{ |x| x["id"] == 10 }[0]["equityAmount"] : 0
+  traders_fyer << {kite_api: ticker_user, fyer_api: fyer_connect, lot_size_nifty: client[:lot_size_nifty], lot_size_banknifty: client[:lot_size_banknifty] , client_id: client[:client], last_login: client[:login_time], funds: funds}
 end
 File.open('config/fyer.yaml', 'w') {|f| f.write CLIENTS_FYER.to_yaml }
 intro_msg +="---FYER Users\n"
