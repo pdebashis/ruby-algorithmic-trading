@@ -18,6 +18,10 @@ Supports Kite/Fyer API
 - gem install telegram-bot-ruby
 - gem install selenium-webdriver
 - gem install frappuccino
+- gem install eventmachine
+- gem install websocket
+- gem install faye-websocket
+- gem install ffi
 
 ###### AWS Deployment
 1. Setup a VPC(65000 IPs) and have a subnet (251 IPs). VPC requires a region and IP range
