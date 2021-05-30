@@ -31,10 +31,11 @@ class StrategyBigCandleClosing
     @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
     @strike = ""
-    @trade_target = 9999
-    @trade_exit = -9999
+    config=OpenStruct.new YAML.load_file 'config/config.yaml'
+    @trade_target = config[@index][:orb_target]
+    @trade_exit = config[@index][:orb_exit]
     @day_target = 9999
-    @trade_flag=false
+    @trade_flag=true
 
     report_path=Dir.pwd+"/reports"
     @report_name=report_path + "/trades" + ".dat"
@@ -179,82 +180,96 @@ class StrategyBigCandleClosing
   def buy_ce
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @instrument = config[@index][:instrument_ce].to_s
-    @strike = config[@index][:strike_ce]
     @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:target_per_trade]
-    @trade_exit = config[@index][:exit_per_trade] 
-   
-    @users.each do |usr|
-      kite_usr=usr[:kite_api]
-      lot_size=usr[:lot_size]
-      if @trade_flag
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-      end
-      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
-    end
-
+    @strike = config[@index][:strike_ce]
+ 
     ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
     @decision_map[:ltp_at_buy]=ltp_value
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
+    lot_size_sym="lot_size_" + @whichnifty
+    
+    @users.each do |usr|
+      api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
+      lot_size=usr[lot_size_sym.to_sym] * @quantity
+      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
+    end
 
     telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value} ; TARGET: #{target_value} ; SL: #{sl_value}"
-    @decision_map[:wait_buy]=false
-    @decision_map[:wait_sell]=true
     @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@decision_map}"
+    if @decision_map[:wait_buy]
+      @decision_map[:wait_buy]=false
+      @decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@decision_map}"
+    end
+
+    if @orb_decision_map[:wait_buy]
+      @orb_decision_map[:wait_buy]=false
+      @orb_decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@orb_decision_map}"
+    end
+
   end
 
   def buy_pe
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @instrument = config[@index][:instrument_pe].to_s
-    @strike = config[@index][:strike_pe]
     @quantity = config[@index][:quantity]
-    @trade_target = config[@index][:target_per_trade]
-    @trade_exit = config[@index][:exit_per_trade]
-    
-    @users.each do |usr|
-      kite_usr=usr[:kite_api]
-      lot_size=usr[:lot_size]
-      if @trade_flag
-        kite_usr.place_cnc_order(@strike, "BUY", @quantity * lot_size, nil, "MARKET") unless @strike.empty? 
-      end
-      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity * lot_size},#{@strike},BUY,<ltp>"
-    end
+    @strike = config[@index][:strike_pe]
 
     ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty?
-    @decision_map[:ltp_at_buy]=ltp_value
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
+    @decision_map[:ltp_at_buy]=ltp_value || 0
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
+    lot_size_sym="lot_size_" + @whichnifty
 
-    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value} ; SL: #{sl_value}"
-    @decision_map[:wait_buy]=false
-    @decision_map[:wait_sell]=true
+    @users.each do |usr|
+      api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
+      lot_size = usr[lot_size_sym.to_sym] * @quantity
+      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
+    end
+
+    telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value}; SL: #{sl_value}"
     @feeder.subscribe(@instrument)
-    @logger.info "DECISION MAP : #{@decision_map}"
+    if @decision_map[:wait_buy]
+      @decision_map[:wait_buy]=false
+      @decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@decision_map}"
+    end
+
+    if @orb_decision_map[:wait_buy]
+      @orb_decision_map[:wait_buy]=false
+      @orb_decision_map[:wait_sell]=true
+      @logger.info "DECISION MAP : #{@orb_decision_map}"
+    end
+  
   end
 
   def sell_position
-    @users.each do |usr|
-      kite_usr=usr[:kite_api]
-      lot_size=usr[:lot_size]
-      if @trade_flag
-        kite_usr.place_cnc_order(@strike, "SELL", @quantity * lot_size, nil, "MARKET") unless @strike.empty?
-      end
-      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{@quantity*lot_size},#{@strike},SELL,<ltp>"
-    end
-
-    @decision_map[:wait_sell]=false
+ 
     @feeder.unsubscribe(@instrument)
     ltp = @user.ltp(@instrument)
-    ltp_value = 0
-    ltp_value = ltp.values.first["last_price"] unless ltp.values.empty? 
+    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
+    lot_size_sym="lot_size_" + @whichnifty
+    
+    @users.each do |usr|
+      api_usr=  usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
+      lot_size=usr[lot_size_sym.to_sym]*@quantity
+      api_usr.place_cnc_order(@strike, "SELL", lot_size, nil, "MARKET") unless @strike.empty?
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},SELL,#{ltp_value}"
+    end
+
+    @decision_map[:wait_sell]=false if @decision_map[:wait_sell]
+    @orb_decision_map[:wait_sell]=false if @orb_decision_map[:wait_sell]
+
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
 
-    telegram "SELLING #{@strike} at #{ltp}; POINTS: #{difference}" 
+    telegram "SELLING #{@strike} at #{ltp}; POINTS: #{difference}"
 
     @instument = 0
     @strike = ""
