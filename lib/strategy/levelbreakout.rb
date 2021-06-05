@@ -55,19 +55,28 @@ class StrategyLevelBreakout
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         @levels=get_levels(closing) if @levels.empty?
-        print "#{time} matches basic conditions" matches_basic_conditions(opening,high,low,closing)
+        print "#{time} matches basic conditions" if matches_basic_conditions(opening,high,low,closing)
       end
     end
   end
 
+  def get_levels(closing_value)
+    level_config=OpenStruct.new YAML.load_file('config/levels.yaml') 
+    targets = level_config.levels.sort
+    raise "Targets not enclosing the data points" if targets.first > closing_value or targets.last < closing_value 
+    targets.each_with_index { |t,n|
+      return [targets[n-1],t] if t > closing_value
+    }
+  end
+
   def matches_basic_conditions(o,h,l,c)
     return false if h < @levels[1] and l > @levels[0]
-    candle_body_size=abs(o-c)
+    candle_body_size=(o-c).abs
     candle_color = o < c ? "GREEN" : "RED"
-    shodow_size = c - l if candle_color = "RED"
-    shodow_size = h - o if candle_color = "GREEN"
-    dist_from_lev = c - @levels[0] if candle_color = "GREEN"
-    dist_from_lev = @levels[1] - c if candle_color = "RED"
+    shodow_size = c - l if candle_color == "RED"
+    shodow_size = h - o if candle_color == "GREEN"
+    dist_from_lev = c - @levels[0] if candle_color == "GREEN"
+    dist_from_lev = @levels[1] - c if candle_color == "RED"
     return true if candle_body_size > @candle_body_min_size and shodow_size < @candle_shadow_max_size and dist_from_lev < @candle_max_dist_from_lev
   end
 
@@ -168,15 +177,6 @@ class StrategyLevelBreakout
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
       @trade_flag=false
     end
-  end
-
-  def get_levels(closing_value)
-    level_config=OpenStruct.new YAML.load_file('config/levels.yaml') 
-    targets = level_config.levels.sort
-    raise "Targets not enclosing the data points" if targets.first > closing_value or targets.last < closing_value 
-    targets.each_with_index { |t,n|
-      return [targets[n-1],t] if t > closing_value
-    }
   end
 
   def assign_candle(o,h,l,c)

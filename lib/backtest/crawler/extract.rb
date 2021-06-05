@@ -6,10 +6,10 @@ class ExtractCandles
   attr_reader :url
 
   def initialize()
-    @from_date="2021-01-23"
-    @to_date="2021-01-31"
-    @user="YD7348"
-    @authorizaton="enctoken zAuvBHLOoKFSJvIDO0dyQsSaI9/mxhw9IqkdIJgiGxfbPxHk5b3TyMLbCJUC9I6u6BgeZLhJ64gQwkZpX+7nu09ZZ1i3xA=="
+    @from_date="2021-01-01"
+    @to_date="2021-06-04"
+    @user="NC7756"
+    @authorizaton="enctoken naWkjqZ1OmRYqh6GYx1OnJZvDIpHadnHT2NrdsDXKhUXrRQw9BTLDFtddjMOe3PRxoiLqK9VU4bMyLF68toqHbH8XJgVuA=="
   end
 
   def any?
@@ -24,7 +24,7 @@ class ExtractCandles
   private
 
   def response_body
-  	uri = URI("https://kite.zerodha.com/oms/instruments/historical/121345/15minute?user_id=#{@user}&oi=1&from=#{@from_date}&to=#{@to_date}")
+  	uri = URI("https://kite.zerodha.com/oms/instruments/historical/260105/15minute?user_id=#{@user}&oi=1&from=#{@from_date}&to=#{@to_date}")
 
 	response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
 	  request = Net::HTTP::Get.new(uri)
@@ -38,3 +38,6 @@ class ExtractCandles
 end
 
 puts ExtractCandles.new().any?
+
+#Make sure the ordering of columns is as expected 
+#cat 2020.csv | awk -F',' '{print $2","$3","$4","$5","$1}' > 2020.csv.fixed

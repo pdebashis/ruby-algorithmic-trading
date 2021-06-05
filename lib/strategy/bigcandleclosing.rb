@@ -21,8 +21,8 @@ class StrategyBigCandleClosing
     @telegram_bot=TelegramBot.new
     @logger = logger
     @quantity=0
-    @decision_map={:big_candle => false, :trigger_price => 0, :wait_buy => false, :wait_sell => false}
     @net_day=0
+    @trade_flag=true
     @index = @feeder.instrument.to_s 
     @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
@@ -31,8 +31,6 @@ class StrategyBigCandleClosing
     @trade_target = config[@index][:orb_target]
     @trade_exit = config[@index][:orb_exit]
     @day_target = config[@index][:target_per_day]
-
-    @trade_flag=false
     @report_name=Dir.pwd+"/reports/trades.dat"
   end
 

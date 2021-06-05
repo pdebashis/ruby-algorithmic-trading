@@ -1,8 +1,9 @@
 require_relative '../bar'
-require_relative 'orb'
+require_relative 'levelbreakout'
 require 'frappuccino'
 require 'logger'
 require 'yaml'
+require 'ostruct'
 require 'faye/websocket'
 require 'eventmachine'
 require 'time'
@@ -11,7 +12,7 @@ class Feeder
 
   def initialize 
     
-    data_file_path="2019_2020.csv"
+    data_file_path="2020.csv"
     targets_file_path="./../../config/levels.yaml"
 
     raise "Source file not found" unless File.file? data_file_path
@@ -36,6 +37,7 @@ class Feeder
 
     @ticks = {}      
     @bars = {}
+    @instrument = 260105
   end
 
   def start
@@ -84,11 +86,12 @@ class Feeder
 
 end
 
-LOG=Logger.new('results/bigcandle_backtest.log', 'daily', 30)
+LOG=Logger.new('results/levelsbreakout_backtest.log', 'daily', 30)
 LOG.formatter = proc do |severity, datetime, progname, msg|
   "#{msg}\n"
 end
 
 a=Feeder.new 
-StrategyOrb.new(a, LOG)
+#StrategyOrb.new(a, LOG)
+StrategyLevelBreakout.new(a,LOG)
 a.start
