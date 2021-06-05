@@ -1,4 +1,4 @@
-class StrategyHighLow
+class StrategyLevelBreakout
   def initialize traders, feeder, logger=nil
     @user = traders.first[:kite_api]
     @users = traders
@@ -35,7 +35,42 @@ class StrategyHighLow
 
     @levels=[]
     @candle=[]
+    @candle_body_min_size=40
+    @candle_shadow_max_size=50
+    @candle_max_dist_from_lev=30
   end
+
+  def on_bar bar
+    bar.bar_data.each do |symbol, data|
+      @logger.info "NEW CANDLE #{data}"
+      time = data[:time]
+      opening = data[:open]
+      high = data[:high]
+      low = data[:low]
+      closing = data[:close]
+
+      if time.eql? "14:45"
+        close_day(closing)
+      elsif time.eql? "15:0"
+        telegram "MARKET CLOSED :: NET:#{@net_day}"
+      else
+        @levels=get_levels(closing) if @levels.empty?
+        print "#{time} matches basic conditions" matches_basic_conditions(opening,high,low,closing)
+      end
+    end
+  end
+
+  def matches_basic_conditions(o,h,l,c)
+    return false if h < @levels[1] and l > @levels[0]
+    candle_body_size=abs(o-c)
+    candle_color = o < c ? "GREEN" : "RED"
+    shodow_size = c - l if candle_color = "RED"
+    shodow_size = h - o if candle_color = "GREEN"
+    dist_from_lev = c - @levels[0] if candle_color = "GREEN"
+    dist_from_lev = @levels[1] - c if candle_color = "RED"
+    return true if candle_body_size > @candle_body_min_size and shodow_size < @candle_shadow_max_size and dist_from_lev < @candle_max_dist_from_lev
+  end
+
 
   def book_pl_strike strike
     profit= strike - @candle[2]
@@ -59,26 +94,7 @@ class StrategyHighLow
       book_pl(tick) if @candle[4].eql? "BUY" or @candle[4].eql? "SELL"  
     end
   end
-  
-  def on_bar bar
-    bar.bar_data.each do |symbol, data|
-      @logger.info "NEW CANDLE #{data}"
-      time = data[:time]
-      opening = data[:open]
-      high = data[:high]
-      low = data[:low]
-      closing = data[:close]
 
-      if time.eql? "14:45"
-        close_day(closing)
-      elsif time.eql? "15:0"
-        telegram "MARKET CLOSED :: NET:#{@net_day}"
-      else
-        @levels=get_levels(closing) if @levels.empty?
-        assign_candle(opening,high,low,closing) if @candle.empty?
-      end
-    end
-  end
 
   private 
 

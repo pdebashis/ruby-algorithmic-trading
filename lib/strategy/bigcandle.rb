@@ -19,14 +19,10 @@ class StrategyBigCandle
       on_value(&method(:on_strike))
 
     @telegram_bot=TelegramBot.new
-
     @logger = logger
     @quantity=0
-    @levels=[]
-    @decision_map={:big_candle => false, :trigger_price => 0, :wait_buy => false, :wait_sell => false}
-    @orb_decision_map={:wait_buy => false, :wait_sell => false}
     @net_day=0
-  
+    @trade_flag=true
     @index = @feeder.instrument.to_s 
     @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
@@ -34,17 +30,14 @@ class StrategyBigCandle
     config=OpenStruct.new YAML.load_file 'config/config.yaml'
     @trade_target = config[@index][:orb_target]
     @trade_exit = config[@index][:orb_exit]
-    @day_target = 9999
-    @trade_flag=true
-    
-    config=OpenStruct.new YAML.load_file 'config/config.yaml'
+    @day_target = config[@index][:target_per_day]
+    @report_name=Dir.pwd+"/reports/trades.dat"
+
     @hl_height = config[@index][:big_candle_size].to_i
     @oc_height = @hl_height/2 
-    @day_target = config[@index][:target_per_day]
     @safety_size = 10 
- 
-    report_path=Dir.pwd+"/reports"
-    @report_name=report_path + "/trades" + ".dat"
+    @decision_map={:big_candle => false, :trigger_price => 0, :wait_buy => false, :wait_sell => false}
+    @orb_decision_map={:wait_buy => false, :wait_sell => false}
   end
 
   def on_bar bar
@@ -60,7 +53,7 @@ class StrategyBigCandle
         close_day(closing)
       elsif time.eql? "15:0"
         close_day(closing)
-        reset_counters 
+        reset_counters
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         check_orb(high,low,time,opening,closing)
@@ -233,7 +226,7 @@ class StrategyBigCandle
     @users.each do |usr|
       api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
       lot_size=usr[lot_size_sym.to_sym] * @quantity
-      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") if @trade_flag
       reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
     end
 
@@ -269,7 +262,7 @@ class StrategyBigCandle
     @users.each do |usr|
       api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
       lot_size = usr[lot_size_sym.to_sym] * @quantity
-      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") unless @strike.empty?
+      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") if @trade_flag
       reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
     end
 
@@ -299,7 +292,7 @@ class StrategyBigCandle
     @users.each do |usr|
       api_usr=  usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
       lot_size=usr[lot_size_sym.to_sym]*@quantity
-      api_usr.place_cnc_order(@strike, "SELL", lot_size, nil, "MARKET") unless @strike.empty?
+      api_usr.place_cnc_order(@strike, "SELL", lot_size, nil, "MARKET") if @trade_flag
       reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},SELL,#{ltp_value}"
     end
 
