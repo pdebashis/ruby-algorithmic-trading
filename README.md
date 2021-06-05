@@ -14,7 +14,6 @@ Supports Kite/Fyer API
 - Create config.yaml,	Kite.yaml, Fyer.yaml
 - Add geckodriver to $PATH
 - yum install firefox
-- gem install ostruct
 - gem install watir
 - gem install telegram-bot-ruby
 - gem install selenium-webdriver
