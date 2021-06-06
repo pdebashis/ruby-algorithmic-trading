@@ -35,9 +35,10 @@ class StrategyLevelBreakout
 
     @levels=[]
     @candle=[]
-    @candle_body_min_size=40
-    @candle_shadow_max_size=50
-    @candle_max_dist_from_lev=30
+    @candle_body_min_perc=0.07
+    @candle_shadow_max_perc=0.25
+    @candle_max_dist_from_lev=0.10
+    @decision_map={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :green => nil, :target_value => 0}
   end
 
   def on_bar bar
@@ -55,7 +56,7 @@ class StrategyLevelBreakout
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
         @levels=get_levels(closing) if @levels.empty?
-        print "#{time} matches basic conditions" if matches_basic_conditions(opening,high,low,closing)
+        telegram "#{time} candle matches level breakout conditions" if matches_basic_conditions(opening,high,low,closing)
       end
     end
   end
@@ -71,13 +72,24 @@ class StrategyLevelBreakout
 
   def matches_basic_conditions(o,h,l,c)
     return false if h < @levels[1] and l > @levels[0]
+
     candle_body_size=(o-c).abs
     candle_color = o < c ? "GREEN" : "RED"
+    @decision_map[:green] =  candle_color == "GREEN" ? true : false
     shodow_size = c - l if candle_color == "RED"
-    shodow_size = h - o if candle_color == "GREEN"
+    shodow_size = h - c if candle_color == "GREEN"
     dist_from_lev = c - @levels[0] if candle_color == "GREEN"
     dist_from_lev = @levels[1] - c if candle_color == "RED"
-    return true if candle_body_size > @candle_body_min_size and shodow_size < @candle_shadow_max_size and dist_from_lev < @candle_max_dist_from_lev
+
+    body_shadow_ratio = candle_body_size*2.5 > shodow_size
+    levels_diff = @levels[1] - @levels[0]
+    return false unless body_shadow_ratio
+
+    candle_body_size_matches = candle_body_size > @candle_body_min_perc * levels_diff
+    candle_shadow_size_matches = shodow_size < @candle_shadow_max_perc * levels_diff
+    candle_dist_from_level_matches = dist_from_lev < @candle_max_dist_from_lev * levels_diff
+    @logger.info("BODY:#{candle_body_size} SHADOW:#{shodow_size} DISTFROMLVL:#{dist_from_lev} LEVELSIZE:#{levels_diff}")
+    return true if candle_body_size_matches and candle_shadow_size_matches and candle_dist_from_level_matches
   end
 
 
@@ -274,22 +286,22 @@ class StrategyLevelBreakout
   end
 
   def close_day close
-    differen=0
-    diffe2=0
-    if @candle[4] == "SELL"
-      differen = @candle[3] - close
-      ltp=sell_position
-      diffe2 = ltp - @candle[2]
-      telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
-    elsif @candle[4] == "BUY"
-      differen = close - @candle[3]
-      ltp=sell_position
-      diffe2 = ltp - @candle[2]
-      telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
-    end
-    @net_day+=differen
-    @net_bnf+=diffe2
-    @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-    reset_counters
+    # differen=0
+    # diffe2=0
+    # if @candle[4] == "SELL"
+    #   differen = @candle[3] - close
+    #   ltp=sell_position
+    #   diffe2 = ltp - @candle[2]
+    #   telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
+    # elsif @candle[4] == "BUY"
+    #   differen = close - @candle[3]
+    #   ltp=sell_position
+    #   diffe2 = ltp - @candle[2]
+    #   telegram "END TRADE:#{differen};strike:#{ltp};BNF_POINTS:#{diffe2}"
+    # end
+    # @net_day+=differen
+    # @net_bnf+=diffe2
+    # @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
+    # reset_counters
   end
 end
