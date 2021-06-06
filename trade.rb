@@ -149,7 +149,7 @@ pid4 = fork do
 end
 
 pid5 = fork do
-  APP.info "Running BigCandle LevelBreakout strategy"
+  APP.info "Running LevelBreakout strategy"
   feeder5.start
   exit
 end
