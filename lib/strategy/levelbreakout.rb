@@ -33,12 +33,13 @@ class StrategyLevelBreakout
     @day_target = config[@index][:target_per_day]
     @report_name=Dir.pwd+"/reports/trades.dat"
 
-    @levels=[]
-    @candle=[]
+    @levels = []
+    @candle_color = nil
     @candle_body_min_perc=0.07
     @candle_shadow_max_perc=0.25
     @candle_max_dist_from_lev=0.10
-    @decision_map={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :green => nil, :target_value => 0}
+    @decision_map_green={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0}
+    @decision_map_red={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0}
   end
 
   def on_bar bar
@@ -55,8 +56,17 @@ class StrategyLevelBreakout
       elsif time.eql? "15:0"
         telegram "MARKET CLOSED :: NET:#{@net_day}"
       else
-        @levels=get_levels(closing) if @levels.empty?
-        telegram "#{time} candle matches level breakout conditions" if matches_basic_conditions(opening,high,low,closing)
+        @levels=get_levels(closing)
+        if matches_basic_conditions(opening,high,low,closing)
+          telegram "#{time} matches basic conditions"
+          if @candle_color == "GREEN"
+            @decision_map_green[:trigger_price] = closing
+            @decision_map_green[:stop_loss] = low
+          else
+            @decision_map_red[:trigger_price] = closing
+            @decision_map_red[:stop_loss] = high
+          end
+        end
       end
     end
   end
@@ -74,22 +84,23 @@ class StrategyLevelBreakout
     return false if h < @levels[1] and l > @levels[0]
 
     candle_body_size=(o-c).abs
-    candle_color = o < c ? "GREEN" : "RED"
-    @decision_map[:green] =  candle_color == "GREEN" ? true : false
-    shodow_size = c - l if candle_color == "RED"
-    shodow_size = h - c if candle_color == "GREEN"
-    dist_from_lev = c - @levels[0] if candle_color == "GREEN"
-    dist_from_lev = @levels[1] - c if candle_color == "RED"
-
-    body_shadow_ratio = candle_body_size*2.5 > shodow_size
+    @candle_color = o < c ? "GREEN" : "RED"
     levels_diff = @levels[1] - @levels[0]
+
+    shodow_size =  @candle_color == "RED" ? c - l : h - c
+    dist_from_lev =  @candle_color == "GREEN" ? c - @levels[0] : @levels[1] - c
+    body_shadow_ratio = candle_body_size*2.5 > shodow_size
+    @logger.info("BODY:#{candle_body_size} SHADOW:#{shodow_size} DISTFROMLVL:#{dist_from_lev} LEVELSIZE:#{levels_diff} COLOR:#{@candle_color}")
     return false unless body_shadow_ratio
 
     candle_body_size_matches = candle_body_size > @candle_body_min_perc * levels_diff
     candle_shadow_size_matches = shodow_size < @candle_shadow_max_perc * levels_diff
     candle_dist_from_level_matches = dist_from_lev < @candle_max_dist_from_lev * levels_diff
-    @logger.info("BODY:#{candle_body_size} SHADOW:#{shodow_size} DISTFROMLVL:#{dist_from_lev} LEVELSIZE:#{levels_diff}")
-    return true if candle_body_size_matches and candle_shadow_size_matches and candle_dist_from_level_matches
+    dist_not_zero = dist_from_lev > 0
+    shadow_not_zero = shodow_size > 0
+    not_zero = dist_not_zero and shadow_not_zero
+    @logger.info("BODY:#{candle_body_size_matches} SHADOW:#{candle_shadow_size_matches} DISTFROMLVL:#{candle_dist_from_level_matches} NOTZERO:#{not_zero}")
+    return true if candle_body_size_matches and candle_shadow_size_matches and candle_dist_from_level_matches and not_zero
   end
 
 
@@ -121,7 +132,7 @@ class StrategyLevelBreakout
 
   def telegram msg
     @logger.info msg
-    #@telegram_bot.send_message "[highlow] #{msg}" 
+    @telegram_bot.send_message "[#{@whichnifty}] #{msg}" 
   end
 
   def buy_ce
@@ -183,60 +194,25 @@ class StrategyLevelBreakout
   end
 
   def reset_counters
-    @levels=[]
-    @candle=[]
     if @net_bnf > @day_target and @trade_flag
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
       @trade_flag=false
     end
-  end
 
-  def assign_candle(o,h,l,c)
-    if l <= @levels[0] and h >= @levels[1]
-      telegram "UNDECIDED due to high and low outside levels"
-      reset_counters
-    elsif h >= @levels[1]
-      @candle=[c,h,l,o,"RED"]
-      telegram "RED"
-    elsif l <= @levels[0]
-      @candle=[c,h,l,o,"GREEN"]
-      telegram "GREEN"
-    else
-      reset_counters
-      telegram "UNDECIDED due to high and low inside levels"
-    end
-  end
+    # if color == "GREEN"
+    #   @decision_map_green[:wait_buy]= false
+    #   @decision_map_green[:wait_sell]=false
+    #   @decision_map_green[:green] = nil 
+    #   @decision_map_green[:stop_loss]=nil
+    #   @decision_map_green[:trigger_price] = nil
+    # else
+    #   @decision_map_red[:wait_buy]= false
+    #   @decision_map_red[:wait_sell]=false
+    #   @decision_map_red[:green] = nil 
+    #   @decision_map_red[:stop_loss]=nil
+    #   @decision_map_red[:trigger_price] = nil
+    # end
 
-  def do_action(tick)
-    if @candle[4] == "GREEN"
-      if tick > @levels[0]
-        @levels=get_levels(tick)
-        @target=@levels[1]
-        @stop_loss=@levels[0]
-        ltp = buy_ce
-        @candle=[0,0,ltp,tick,"BUY"]
-        telegram "ORDER PLACED #{@strike} for quantity #{@quantity} at #{ltp}"
-        @logger.info "BUY Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss}"
-      else
-        telegram "NO ACTION due to market lower than level"
-        reset_counters
-      end
-    end
-
-    if @candle[4] == "RED"
-      if tick < @levels[1]
-        @levels=get_levels(tick)
-        @target=@levels[0]
-        @stop_loss=@levels[1]
-        ltp=buy_pe
-        @candle=[0,0,ltp,tick,"SELL"]
-        telegram "ORDER PLACED #{@strike} for quantity #{@quantity} at #{ltp}"
-        @logger.info "SELL Banknifty@ #{tick}; target:#{@target};SL:#{@stop_loss}"
-      else
-        @logger.info "NO ACTION due to market higher than level"
-        reset_counters
-      end
-    end
   end
 
   def book_pl tick

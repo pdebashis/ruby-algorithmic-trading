@@ -52,7 +52,7 @@ class Feeder
       opening=opening.to_i
       p timestamp
       new_date=timestamp.split("T")[0]
-      #next if Time.strptime(timestamp,"%Y-%m-%d").thursday?
+      next if Time.strptime(timestamp,"%Y-%m-%d").thursday?
       new_time=timestamp.split("T")[1][0..4]
 
       if timestamp.include? ("09:15") or @today != new_date
