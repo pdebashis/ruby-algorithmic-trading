@@ -34,6 +34,7 @@ class StrategyLevelBreakout
     @report_name=Dir.pwd+"/reports/trades.dat"
 
     @levels = []
+    @candle=[]
     @candle_color = nil
     @candle_body_min_perc=0.07
     @candle_shadow_max_perc=0.25
@@ -193,72 +194,29 @@ class StrategyLevelBreakout
     ltp.values.first["last_price"] unless ltp.values.empty? 
   end
 
-  def reset_counters
+  def reset_counters(color=nil)
     if @net_bnf > @day_target and @trade_flag
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
       @trade_flag=false
     end
 
-    # if color == "GREEN"
-    #   @decision_map_green[:wait_buy]= false
-    #   @decision_map_green[:wait_sell]=false
-    #   @decision_map_green[:green] = nil 
-    #   @decision_map_green[:stop_loss]=nil
-    #   @decision_map_green[:trigger_price] = nil
-    # else
-    #   @decision_map_red[:wait_buy]= false
-    #   @decision_map_red[:wait_sell]=false
-    #   @decision_map_red[:green] = nil 
-    #   @decision_map_red[:stop_loss]=nil
-    #   @decision_map_red[:trigger_price] = nil
-    # end
+    if color == "GREEN"
+      @decision_map_green[:wait_buy]= false
+      @decision_map_green[:wait_sell]=false
+      @decision_map_green[:green] = nil 
+      @decision_map_green[:stop_loss]=nil
+      @decision_map_green[:trigger_price] = nil
+    else
+      @decision_map_red[:wait_buy]= false
+      @decision_map_red[:wait_sell]=false
+      @decision_map_red[:green] = nil 
+      @decision_map_red[:stop_loss]=nil
+      @decision_map_red[:trigger_price] = nil
+    end
 
   end
 
   def book_pl tick
-    if @candle[4] == "SELL"
-          if tick > @stop_loss
-            diffe = @candle[3]-tick
-            @net_day+=diffe
-            ltp=sell_position
-            diffe2 = ltp-@candle[2]
-            @net_bnf+=diffe2
-            telegram "STOPLOSS HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
-            @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-            reset_counters
-          elsif tick < @target
-            diffe=@candle[3]-tick
-            @net_day+=diffe
-            ltp=sell_position
-            diffe2= ltp-@candle[2]
-            @net_bnf+=diffe2
-            telegram "TARGET HIT:#{diffe};#{@strike}:#{ltp};BNF_POINTS:#{diffe2}"
-            @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-            reset_counters
-          end
-    end
-
-    if @candle[4] == "BUY"
-        if tick > @target
-          diffe = tick - @candle[3]
-          @net_day+=diffe
-          ltp=sell_position
-          diffe2 = ltp - @candle[2]
-          @net_bnf+=diffe2
-          telegram "TARGET HIT:#{diffe};strike:#{ltp};BNF_POINTS:#{diffe2}"
-          @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-          reset_counters
-        elsif tick < @stop_loss
-          diffe= tick - @candle[3]
-          @net_day+=diffe
-          ltp=sell_position
-          diffe2 = ltp - @candle[2]
-          @net_bnf+=diffe2
-          telegram "STOPLOSS HIT:#{diffe};strike:#{ltp};BNF_POINTS:#{diffe2}"
-          @logger.info "NET:#{@net_day};NET_BNF:#{@net_bnf}"
-          reset_counters
-        end
-    end
   end
 
   def close_day close
