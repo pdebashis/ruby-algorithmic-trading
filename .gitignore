@@ -14,6 +14,7 @@
 /tmp/
 /logs/
 /reports/
+/lib/backtest/results/
 nohup.out
 
 # Used by dotenv library to load environment variables.
