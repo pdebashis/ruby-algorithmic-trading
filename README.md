@@ -10,10 +10,11 @@ Supports Kite/Fyer API
 
 ###### Setup
 - rvm install 2.5.5
-- git clone <git-url>
-- Create config.yaml,	Kite.yaml, Fyer.yaml
+- git clone <git url>
+- Create config.yaml, Kite.yaml, Fyer.yaml
 - Add geckodriver to $PATH
 - yum install firefox
+- gem install rest-client
 - gem install watir
 - gem install telegram-bot-ruby
 - gem install selenium-webdriver

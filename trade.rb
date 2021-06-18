@@ -19,17 +19,17 @@ LOG3=Logger.new('logs/bigcandle_closing_banknifty.log', 'weekly', 30)
 LOG4=Logger.new('logs/bigcandle_closing_nifty.log', 'weekly', 30)
 LOG5=Logger.new('logs/levelbreakout_banknifty.log', 'weekly', 30)
 
-APP.formatter = proc do |severity, datetime, progname, msg|
+APP.formatter = proc do |severity, datetime, _progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
     "[#{date_format}] #{severity.ljust(5)}: #{msg}\n"
 end
 
-DATA.formatter = proc do |severity, datetime, progname, msg|
+DATA.formatter = proc do |severity, datetime, _progname, msg|
   date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")  
   "[#{date_format}] #{msg}\n"
 end
 
-log_formatter = proc do |severity, datetime, progname, msg|
+log_formatter = proc do |severity, datetime, _progname, msg|
     date_format = datetime.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
     "[#{date_format}] #{severity.ljust(5)}: #{msg}\n"
 end
@@ -52,6 +52,7 @@ CLIENTS.each do |client|
     kite_connect.set_access_token(client[:access_token])
     APP.info "Using ACCESS TOKEN From Database"
   else
+    next if client[:request_token].nil?
     begin
       login_details=kite_connect.generate_access_token(client[:request_token], client[:api_secret])
     rescue
@@ -85,6 +86,7 @@ CLIENTS_FYER.each do |client|
     fyer_connect.set_access_token(client[:access_token])
     APP.info "Using ACCESS TOKEN From Database"
   else
+    next if client[:request_token].nil?
     begin
       login_details=fyer_connect.generate_access_token(client[:request_token], client[:api_secret])
     rescue
@@ -124,31 +126,31 @@ StrategyBigCandleClosing.new(traders_all, feeder3, LOG3)
 StrategyBigCandleClosing.new(traders_all, feeder4, LOG4)
 StrategyLevelBreakout.new(traders_all, feeder5, LOG5)
 
-pid1 = fork do
+fork do
   APP.info "Running Bigcandle strategy"
   feeder1.start  
   exit
 end
 
-pid2 = fork do
+fork do
   APP.info "Running BigCandle strategy"
   feeder2.start
   exit
 end
 
-pid3 = fork do
+fork do
   APP.info "Running BigCandle Closing strategy"
   feeder3.start
   exit
 end
 
-pid4 = fork do
+fork do
   APP.info "Running BigCandle Closing strategy"
   feeder4.start
   exit
 end
 
-pid5 = fork do
+fork do
   APP.info "Running LevelBreakout strategy"
   feeder5.start
   exit

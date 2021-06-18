@@ -32,7 +32,7 @@ class Feeder
     @net_day=0
 
     File.open(data_file_path, "r") do |fp|
-      while !fp.eof? do @data_in_file << fp.gets end
+      until fp.eof? do @data_in_file << fp.gets end
     end
 
     @ticks = {}      

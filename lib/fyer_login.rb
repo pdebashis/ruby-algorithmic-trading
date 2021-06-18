@@ -6,7 +6,7 @@ CLIENTS=YAML.load_file configs_file
 browser = Watir::Browser.new :firefox, headless: true
 
 CLIENTS.each do |record|
-  url=record[:login_url] + "&response_type=code&state=ruby"
+  url=record[:login_url] #+ "&response_type=code&state=ruby"
   client=record[:client]
   password=record[:password]
   dob=record[:otp]
@@ -42,8 +42,14 @@ CLIENTS.each do |record|
   
   sleep 3
   puts browser.url
-  ok=browser.url.split("code=")[1].split("&")[0]
-  continue unless ok == "200"
+  code=browser.url.split("code=")
+  unless code[1]
+    record[:access_token] = nil 
+    record[:request_token] = nil
+    next puts "LOGIN ERROR for #{record[:client]}"
+  end
+  
+  ok = code[1].split("&"[0])
   request_token=browser.url.split("auth_code=")[1].split("&")[0]
 
   record[:access_token] = nil 

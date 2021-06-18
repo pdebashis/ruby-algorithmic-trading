@@ -61,7 +61,7 @@ class StrategyHighLow
   end
   
   def on_bar bar
-    bar.bar_data.each do |symbol, data|
+    bar.bar_data.each do |_symbol, data|
       @logger.info "NEW CANDLE #{data}"
       time = data[:time]
       opening = data[:open]
