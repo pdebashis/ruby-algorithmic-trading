@@ -144,7 +144,7 @@ class StrategyBigCandle
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message "[#{@whichnifty}] #{msg}"
+    @telegram_bot.send_message "[#{@whichnifty}][BIG CANDLE] #{msg}"
   end
 
 
@@ -302,7 +302,7 @@ class StrategyBigCandle
     difference = ltp_value - @decision_map[:ltp_at_buy]
     @net_day+=difference
 
-    telegram "SELLING #{@strike} at #{ltp}; POINTS: #{difference}"
+    telegram "SELLING #{@strike} at #{ltp_value}; POINTS: #{difference}"
 
     @instument = 0
     @strike = ""
@@ -320,7 +320,7 @@ class StrategyBigCandle
   def close_day close
     return unless @decision_map[:wait_sell]
     sell_position
-    telegram "MARKET CLOSE REACHED, SELLING POSITION NET_BNF:#{@net_day}"
+    telegram "END TRADE, SELLING POSITION NET_BNF:#{@net_day}"
     reset_counters
   end
 end

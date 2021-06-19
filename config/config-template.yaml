@@ -18,6 +18,8 @@ table:
     :target_per_day: 150
     :orb_target: 70
     :orb_exit: -40
+    :levelbreakout_target: 100
+    :levelbreakout_exit: -50
     :strike_ce: BANKNIFTY21APR32600CE
     :instrument_ce: 16754690                                             
     :strike_pe: BANKNIFTY21APR31000PE
@@ -30,6 +32,8 @@ table:
     :target_per_day: 100
     :orb_target: 40
     :orb_exit: -30
+    :levelbreakout_target: 100
+    :levelbreakout_exit: -50
     :strike_ce: NIFTY21APR14700CE 
     :instrument_ce: 17060610
     :strike_pe: NIFTY21APR13950PE

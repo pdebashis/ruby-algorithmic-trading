@@ -1,4 +1,4 @@
-class StrategyLevelBreakout
+class StrategyLevelBreakoutRed
   def initialize traders, feeder, logger=nil
     @user = traders.first[:kite_api]
     @users = traders
@@ -39,8 +39,7 @@ class StrategyLevelBreakout
     @candle_body_min_perc=0.07
     @candle_shadow_max_perc=0.25
     @candle_max_dist_from_lev=0.10
-    @decision_map_green={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0, :ltp_at_buy => 0, :strike => nil, :instrument => nil}
-    @decision_map_red={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0, :ltp_at_buy => 0, :strike => nil, :instrument => nil}
+    @decision_map={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0, :ltp_at_buy => 0, :strike => nil, :instrument => nil}
   end
 
   def on_bar bar
@@ -60,17 +59,10 @@ class StrategyLevelBreakout
         @levels=get_levels(closing)
         if matches_basic_conditions(opening,high,low,closing)
           telegram "#{time} matches basic conditions"
-          if @candle_color == "GREEN"
-            @decision_map_green[:trigger_price] = closing
-            @decision_map_green[:stop_loss] = low
-            @decision_map_green[:target_value] = [@levels[1],closing + 250].min
-            buy_ce
-          else
-            @decision_map_red[:trigger_price] = closing
-            @decision_map_red[:stop_loss] = high
-            @decision_map_green[:target_value] = [@levels[0],closing - 250].max
-            buy_pe
-          end
+          @decision_map[:trigger_price] = closing
+          @decision_map[:stop_loss] = high
+          @decision_map[:target_value] = [@levels[0],closing - 250].max
+          buy_pe
         end
       end
     end
@@ -90,6 +82,7 @@ class StrategyLevelBreakout
 
     candle_body_size=(o-c).abs
     @candle_color = o < c ? "GREEN" : "RED"
+    return false if color == "GREEN"
     levels_diff = @levels[1] - @levels[0]
 
     shodow_size =  @candle_color == "RED" ? c - l : h - c
@@ -110,7 +103,7 @@ class StrategyLevelBreakout
 
 
   def book_pl_strike(strike,color)
-    buy_price = color == "GREEN" ? @decision_map_green[:ltp_at_buy] : @decision_map_red[:ltp_at_buy]
+    buy_price = @decision_map[:ltp_at_buy]
     profit = strike - buy_price
     if profit > @trade_target or profit < @trade_exit
       sell_position color
@@ -121,24 +114,15 @@ class StrategyLevelBreakout
   end
 
   def on_strike strike 
-    if @decision_map_green[:wait_sell]
-      book_pl_strike(strike,"GREEN")
-    end
-
-    if @decision_map_red[:wait_sell]
-      book_pl_strike(strike,"RED")
+    if @decision_map[:wait_sell]
+      book_pl_strike(strike)
     end
   end
 
   def on_tick tick
-    if @decision_map_green[:wait_sell]
-      sell_position "GREEN" if tick < @decision_map_green[:stop_loss] 
-      sell_position "GREEN" if tick > @decision_map_green[:target_price]
-    end
-
-    if @decision_map_red[:wait_sell]
-      sell_position "RED" if tick > @decision_map_red[:stop_loss]
-      sell_position "RED" if tick < @decision_map_red[:target_price]
+    if @decision_map[:wait_sell]
+      sell_position if tick > @decision_map[:stop_loss]
+      sell_position if tick < @decision_map[:target_price]
     end
   end
 
@@ -147,35 +131,24 @@ class StrategyLevelBreakout
 
   def telegram msg
     @logger.info msg
-    @telegram_bot.send_message "[#{@whichnifty}] #{msg}" 
+    @telegram_bot.send_message "[#{@whichnifty}][RED LEVELBREAKOUT] #{msg}" 
   end
-
-  def buy_ce
-    config=OpenStruct.new YAML.load_file 'config/config.yaml'
-    @instrument = config[@index][:instrument_ce].to_s
-    @strike = config[@index][:strike_ce]
-    @quantity = config[@index][:quantity]
-
-    ltp = @user.ltp(@instrument)
-    ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
-    @decision_map_green[:ltp_at_buy]=ltp_value || 0
-    target_value = ltp_value + @trade_target
-    sl_value = ltp_value + @trade_exit
-    lot_size_sym="lot_size_" + @whichnifty
-
+  
+  def refresh_clients_from_yaml
+    CLIENTS=YAML.load_file 'config/login.yaml'
+    CLIENTS_FYER=YAML.load_file 'config/fyer.yaml'
     @users.each do |usr|
-      api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
-      lot_size = usr[lot_size_sym.to_sym] * @quantity
-      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") if @trade_flag
-      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
+      CLIENTS.each do |client|
+        if client[:client] == usr[:client_id]
+          usr[:level_break_enable] = client[:level_break_enable]
+        end
+      end
+      CLIENTS_FYER.each do |client|
+        if client[:client] == usr[:client_id]
+          usr[:level_break_enable] = client[:level_break_enable]
+        end
+      end
     end
-
-    telegram "ORDER PLACED FOR #{strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value}; SL: #{sl_value}"
-    @feeder.subscribe(@instrument)
-    @decision_map_green[:wait_buy]=false
-    @decision_map_green[:wait_sell]=true
-    @logger.info "DECISION MAP : #{@decision_map_green}"
-
   end
 
   def buy_pe
@@ -184,9 +157,11 @@ class StrategyLevelBreakout
     @quantity = config[@index][:quantity]
     @strike = config[@index][:strike_pe]
 
+    refresh_clients_from_yaml
+
     ltp = @user.ltp(@instrument)
     ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
-    @decision_map_red[:ltp_at_buy]=ltp_value || 0
+    @decision_map[:ltp_at_buy]=ltp_value || 0
     target_value = ltp_value + @trade_target
     sl_value = ltp_value + @trade_exit
     lot_size_sym="lot_size_" + @whichnifty
@@ -194,23 +169,23 @@ class StrategyLevelBreakout
     @users.each do |usr|
       api_usr = usr[:fyer_api] ? usr[:fyer_api] : usr[:kite_api]
       lot_size = usr[lot_size_sym.to_sym] * @quantity
-      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") if @trade_flag
-      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}"
+      api_usr.place_cnc_order(@strike, "BUY", lot_size, nil, "MARKET") if @trade_flag and usr[:level_break_enable]
+      reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},BUY,#{ltp_value}" if usr[:level_break_enable]
     end
 
     telegram "ORDER PLACED FOR #{@strike} quantity #{@quantity} at #{ltp_value}; TARGET: #{target_value}; SL: #{sl_value}"
     @feeder.subscribe(@instrument)
-    @decision_map_red[:wait_buy]=false
-    @decision_map_red[:wait_sell]=true
-    @logger.info "DECISION MAP : #{@decision_map_red}"
+    @decision_map[:wait_buy]=false
+    @decision_map[:wait_sell]=true
+    @logger.info "DECISION MAP : #{@decision_map}"
   end
 
 
-  def sell_position color=nil
-    instrument = color == "GREEN" ? decision_map_green[:instrument] : decision_map_red[:instrument]
+  def sell_position
+    instrument = @instrument
 
-    @feeder.unsubscribe(instrument)
-    ltp = @user.ltp(instrument)
+    @feeder.unsubscribe(@instrument)
+    ltp = @user.ltp(@instrument)
     ltp_value = ltp.values.empty? ? 0 : ltp.values.first["last_price"]
     lot_size_sym="lot_size_" + @whichnifty
     
@@ -221,44 +196,24 @@ class StrategyLevelBreakout
       reporting "#{self.to_s},#{usr[:client_id]},#{@quantity},#{lot_size},#{@strike},SELL,#{ltp_value}"
     end
 
-    if color == "GREEN"
-      @decision_map_green[:wait_sell]=false
-      difference = ltp_value - @decision_map_green[:ltp_at_buy]
-      @net_day+=difference
-      telegram "SELLING #{@decision_map_green[:strike]} at #{ltp_value}; POINTS: #{difference}"
-    else
-      @decision_map_red[:wait_sell]=false
-      difference = ltp_value - @decision_map_red[:ltp_at_buy]
-      @net_day+=difference
-      telegram "SELLING #{@decision_map_red[:strike]} at #{ltp_value}; POINTS: #{difference}"
-    end
+    @decision_map[:wait_sell]=false
+    difference = ltp_value - @decision_map[:ltp_at_buy]
+    @net_day+=difference
+    telegram "SELLING #{@decision_map[:strike]} at #{ltp_value}; POINTS: #{difference}"
   end
 
   def reset_counters(color=nil)
-    if color == "GREEN"
-      @decision_map_green[:wait_buy]= false
-      @decision_map_green[:wait_sell]=false
-      @decision_map_green[:stop_loss]=nil
-      @decision_map_green[:trigger_price] = nil
-    else
-      @decision_map_red[:wait_buy]= false
-      @decision_map_red[:wait_sell]=false
-      @decision_map_red[:stop_loss]=nil
-      @decision_map_red[:trigger_price] = nil
-    end
+    @decision_map[:wait_buy]= false
+    @decision_map[:wait_sell]=false
+    @decision_map[:stop_loss]=nil
+    @decision_map[:trigger_price] = nil
   end
 
   def close_day close
-    if @decision_map_green[:wait_sell]
-      sell_position "GREEN" 
-      telegram "END TRADE, SELLING POSITION GREEN NET_BNF:#{@net_day}"
-      reset_counters "GREEN"
-    end
-
-    if @decision_map_red[:wait_sell]
-      sell_position "RED" 
-      telegram "END TRADE, SELLING POSITION RED NET_BNF:#{@net_day}"
-      reset_counters "RED"
+    if @decision_map[:wait_sell]
+      sell_position
+      telegram "END TRADE, SELLING POSITION NET_BNF:#{@net_day}"
+      reset_counters
     end 
   end
 end
