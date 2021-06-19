@@ -135,15 +135,15 @@ class StrategyLevelBreakoutGreen
   end
 
   def refresh_clients_from_yaml
-    CLIENTS=YAML.load_file 'config/login.yaml'
-    CLIENTS_FYER=YAML.load_file 'config/fyer.yaml'
+    clients_kite=YAML.load_file 'config/login.yaml'
+    clients_fyer=YAML.load_file 'config/fyer.yaml'
     @users.each do |usr|
-      CLIENTS.each do |client|
+      clients_kite.each do |client|
         if client[:client] == usr[:client_id]
           usr[:level_break_enable] = client[:level_break_enable]
         end
       end
-      CLIENTS_FYER.each do |client|
+      clients_fyer.each do |client|
         if client[:client] == usr[:client_id]
           usr[:level_break_enable] = client[:level_break_enable]
         end
