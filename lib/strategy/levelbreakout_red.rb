@@ -82,13 +82,13 @@ class StrategyLevelBreakoutRed
 
     candle_body_size=(o-c).abs
     @candle_color = o < c ? "GREEN" : "RED"
-    return false if color == "GREEN"
+    return false if @candle_color == "GREEN"
     levels_diff = @levels[1] - @levels[0]
 
     shodow_size =  @candle_color == "RED" ? c - l : h - c
     dist_from_lev =  @candle_color == "GREEN" ? c - @levels[0] : @levels[1] - c
     body_shadow_ratio = candle_body_size*2.5 > shodow_size
-    @logger.info("BODY:#{candle_body_size} SHADOW:#{shodow_size} DISTFROMLVL:#{dist_from_lev} LEVELSIZE:#{levels_diff} COLOR:#{@candle_color}")
+    @logger.info("BODY:#{candle_body_size} SHADOW:#{shodow_size} DISTFROMLVL:#{dist_from_lev} LEVELSIZE:#{levels_diff}")
     return false unless body_shadow_ratio
 
     candle_body_size_matches = candle_body_size > @candle_body_min_perc * levels_diff
@@ -102,14 +102,14 @@ class StrategyLevelBreakoutRed
   end
 
 
-  def book_pl_strike(strike,color)
+  def book_pl_strike(strike)
     buy_price = @decision_map[:ltp_at_buy]
     profit = strike - buy_price
     if profit > @trade_target or profit < @trade_exit
-      sell_position color
+      sell_position
       @net_bnf+=profit
       telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_bnf}"
-      reset_counters color
+      reset_counters
     end
   end
 
@@ -202,7 +202,7 @@ class StrategyLevelBreakoutRed
     telegram "SELLING #{@decision_map[:strike]} at #{ltp_value}; POINTS: #{difference}"
   end
 
-  def reset_counters(color=nil)
+  def reset_counters
     @decision_map[:wait_buy]= false
     @decision_map[:wait_sell]=false
     @decision_map[:stop_loss]=nil
