@@ -38,6 +38,8 @@ class StrategyBigCandle
     @safety_size = 10 
     @decision_map={:big_candle => false, :trigger_price => 0, :wait_buy => false, :wait_sell => false}
     @orb_decision_map={:wait_buy => false, :wait_sell => false}
+    @display_profit = 5
+    @display_loss = -5
   end
 
   def on_bar bar
@@ -126,7 +128,7 @@ class StrategyBigCandle
 
   def reset_counters
     @decision_map[:big_candle]=false
-	@orb_decision_map[:wait_buy]= false
+	  @orb_decision_map[:wait_buy]= false
     @orb_decision_map[:wait_sell]=false
     @decision_map[:wait_buy]= false
     @decision_map[:wait_sell]=false
@@ -136,6 +138,8 @@ class StrategyBigCandle
     @decision_map[:target_price] = nil
     @decision_map[:ltp_at_buy]=nil
     @decision_map[:size]=0
+    @display_profit = 5
+    @display_loss = -5
     if @net_day > @day_target and @trade_flag
       @logger.info "DAY TARGET ACHIEVED(#{@day_target})"
       @trade_flag=false
@@ -310,10 +314,23 @@ class StrategyBigCandle
 
   def book_pl_strike strike
     profit= strike - @decision_map[:ltp_at_buy]
+    show_profit profit
     if profit > @trade_target or profit < @trade_exit
       sell_position
       telegram "TRADE CAP REACHED(#{profit}); NET_BNF:#{@net_day}"
       reset_counters
+    end
+  end
+
+  def show_profit profit
+    if profit > @display_profit
+      telegram "+#{profit} 🚀"
+      @display_profit += 5
+    end
+
+    if profit < @display_loss
+      telegram "#{profit} 🐵"
+      @display_profit -= 5
     end
   end
 

@@ -39,6 +39,8 @@ class StrategyLevelBreakoutGreen
     @candle_body_min_perc=0.07
     @candle_shadow_max_perc=0.25
     @candle_max_dist_from_lev=0.10
+    @display_profit = 5
+    @display_loss = -5
     @decision_map={:trigger_price => 0, :wait_buy => true, :wait_sell => false, :stop_loss=>0, :target_value => 0, :ltp_at_buy => 0}
   end
 
@@ -105,6 +107,7 @@ class StrategyLevelBreakoutGreen
   def book_pl_strike(strike)
     buy_price = @decision_map[:ltp_at_buy]
     profit = strike - buy_price
+    show_profit profit
     if profit > @trade_target or profit < @trade_exit
       sell_position
       @net_bnf+=profit
@@ -132,6 +135,26 @@ class StrategyLevelBreakoutGreen
   def telegram msg
     @logger.info msg
     @telegram_bot.send_message "[#{@whichnifty}][GREEN LEVELBREAKOUT] #{msg}" 
+  end
+
+  def reporting msg
+    @logger.info msg
+    date_format = Time.now.getlocal("+05:30").strftime("%Y-%m-%d %H:%M:%S")
+    File.open(@report_name,"a+") do |op|
+      op << "#{date_format},#{msg}\n"
+    end
+  end
+
+  def show_profit profit
+    if profit > @display_profit
+      telegram "+#{profit} 🚀"
+      @display_profit += 5
+    end
+
+    if profit < @display_loss
+      telegram "#{profit} 🐵"
+      @display_profit -= 5
+    end
   end
 
   def refresh_clients_from_yaml
@@ -207,6 +230,8 @@ class StrategyLevelBreakoutGreen
     @decision_map[:wait_sell]=false
     @decision_map[:stop_loss]=nil
     @decision_map[:trigger_price] = nil
+    @display_profit = 5
+    @display_loss = -5
   end
 
   def close_day close
