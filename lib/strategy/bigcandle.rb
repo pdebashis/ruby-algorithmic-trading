@@ -330,7 +330,7 @@ class StrategyBigCandle
 
     if profit < @display_loss
       telegram "#{profit} 🐵"
-      @display_profit -= 5
+      @display_loss -= 5
     end
   end
 

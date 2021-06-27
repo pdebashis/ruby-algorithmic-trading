@@ -22,7 +22,7 @@ class StrategyLevelBreakoutRed
     @logger = logger
     @quantity=0
     @net_day=0
-    @trade_flag=false
+    @trade_flag=true
     @index = @feeder.instrument.to_s
     @whichnifty = @feeder.instrument == 256265 ? "nifty" : "banknifty"
     @instrument = 0
@@ -125,7 +125,7 @@ class StrategyLevelBreakoutRed
   def on_tick tick
     if @decision_map[:wait_sell]
       sell_position if tick > @decision_map[:stop_loss]
-      sell_position if tick < @decision_map[:target_price]
+      sell_position if tick < @decision_map[:target_value]
     end
   end
 
@@ -153,7 +153,7 @@ class StrategyLevelBreakoutRed
 
     if profit < @display_loss
       telegram "#{profit} 🐵"
-      @display_profit -= 5
+      @display_loss -= 5
     end
   end
   
