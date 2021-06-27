@@ -96,8 +96,8 @@ class StrategyLevelBreakoutRed
     candle_body_size_matches = candle_body_size > @candle_body_min_perc * levels_diff
     candle_shadow_size_matches = shodow_size < @candle_shadow_max_perc * levels_diff
     candle_dist_from_level_matches = dist_from_lev < @candle_max_dist_from_lev * levels_diff
-    dist_not_zero = dist_from_lev > 0
-    shadow_not_zero = shodow_size > 0
+    dist_not_zero = dist_from_lev > 1
+    shadow_not_zero = shodow_size > 1
     not_zero = dist_not_zero and shadow_not_zero
     @logger.info("BODY:#{candle_body_size_matches} SHADOW:#{candle_shadow_size_matches} DISTFROMLVL:#{candle_dist_from_level_matches} NOTZERO:#{not_zero}")
     return true if candle_body_size_matches and candle_shadow_size_matches and candle_dist_from_level_matches and not_zero
