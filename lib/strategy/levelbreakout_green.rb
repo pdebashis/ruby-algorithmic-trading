@@ -110,8 +110,8 @@ class StrategyLevelBreakoutGreen
     show_profit profit
     if profit > @trade_target or profit < @trade_exit
       sell_position
-      @net_bnf+=profit
-      telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_bnf}"
+      @net_day+=profit
+      telegram "TRADE CAP REACHED(#{profit}), SELLING POSITION NET_BNF:#{@net_day}"
       reset_counters
     end
   end
